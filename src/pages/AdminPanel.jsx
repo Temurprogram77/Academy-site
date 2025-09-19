@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import AdminSidebar from "../components/AdminSidebar";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const AdminPanel = () => {
 
   return (
     <div>
-      <h1>Admin Panel</h1>
+      <AdminSidebar />
     </div>
   );
 };
