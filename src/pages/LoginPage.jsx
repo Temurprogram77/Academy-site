@@ -5,6 +5,9 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import dataImages from "../assets/images";
+import axios from "axios"; // ✅ axios qo‘shildi
+import { useNavigate } from "react-router-dom"; // ✅ navigate qo‘shildi
+
 const { logo } = dataImages;
 
 const LoginPage = () => {
@@ -16,7 +19,9 @@ const LoginPage = () => {
   const [touched, setTouched] = useState({ password: false, phone: false });
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👈 qo‘shildi
+  const [showPassword, setShowPassword] = useState(false);
+
+  const navigate = useNavigate(); // ✅ ishlatamiz
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2000);
@@ -35,35 +40,31 @@ const LoginPage = () => {
   };
 
   const handleContinue = async () => {
-    const phoneErr = validatePhone(phone);
-    const passwordErr = validatePassword(password);
-    setPhoneError(phoneErr);
-    setPasswordError(passwordErr);
-    setTouched({ password: true, phone: true });
-
-    if (phoneErr || passwordErr) return;
-
     try {
-      const response = await fetch("http://167.86.121.42:8080/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, password }),
-      });
+      const res = await axios.post(
+        `http://167.86.121.42:8080/auth/login?phone=${phone}&password=${password}`
+      );
 
-      const result = await response.json();
+      console.log(res.data);
 
-      if (result.success) {
-        setSuccessMessage("Login successful ✅");
-        setErrorMessage("");
-        localStorage.setItem("token", result.data);
-        localStorage.setItem("role", result.role);
+      if (res.data.success) {
+        // token va role saqlaymiz
+        localStorage.setItem("token", res.data.data);
+        localStorage.setItem("role", res.data.message);
+
+        const role = res.data.message;
+
+        if (role === "ADMIN") navigate("/admin-dashboard");
+        else if (role === "TEACHER") navigate("/teacher-dashboard");
+        else if (role === "USER") navigate("/user-dashboard");
+        else if (role === "PARENTS") navigate("/user-dashboard");
+        else setErrorMessage("⚠️ Noma'lum rol qaytdi.");
       } else {
-        setErrorMessage(result.message || "Login failed ❌");
-        setSuccessMessage("");
+        setErrorMessage("❌ Login ma'lumotlari noto‘g‘ri.");
       }
-    } catch (error) {
-      setErrorMessage("Server bilan ulanishda xatolik ❌");
-      setSuccessMessage("");
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("❌ Serverga ulanishda xatolik.");
     }
   };
 
@@ -77,10 +78,10 @@ const LoginPage = () => {
 
   return (
     <div className="bg-[#F3F4F6] min-h-screen flex items-center w-full">
-      <div className="bg-[#fff] min-h-screen mx-auto px-32 py-10 rounded-xl flex items-center justify-center">
-        <div className="relative py-4 flex md:flex-row items-center justify-between gap-10 w-full">
+      <div className="bg-[#fff] min-h-screen mx-auto lg:px-32 px-0 py-10 rounded-xl flex items-center justify-center">
+        <div className="relative md:py-4 py-0 flex md:flex-row items-center justify-between gap-10 w-full">
           {/* Animation */}
-          <div>
+          <div className="md:block hidden">
             <Player
               autoplay
               loop
@@ -93,24 +94,20 @@ const LoginPage = () => {
           <div className="border-l-2 justify-center 2xl:w-[800px] h-[450px]">
             <div className="w-full p-1 rounded-xl h-full">
               <div className="bg-white rounded-xl p-10 w-full h-full flex flex-col justify-center">
-                <div className="w-full flex justify-start">
-                  <img src={logo} alt="Logo" className="w-[200px] h-[60px]" />
+                <div className="w-full flex justify-center">
+                  <img src={logo} alt="Logo" className="w-[500px] h-[160px]" />
                 </div>
                 <h2 className="text-3xl font-semibold text-center my-4">
                   Login
                 </h2>
                 <label>Phone Number</label>
                 <PhoneInput
+                  country={"uz"}
                   value={phone}
                   onChange={(val) => {
                     setPhone(val);
                     setPhoneError(validatePhone(val));
                     setTouched((prev) => ({ ...prev, phone: true }));
-                  }}
-                  onFocus={() => {
-                    if (!phone) {
-                      setPhone("+998");
-                    }
                   }}
                   placeholder="+998 99-999-99-99"
                   inputProps={{
@@ -123,15 +120,16 @@ const LoginPage = () => {
                     }`,
                   }}
                 />
+
                 {phoneError && touched.phone && (
                   <p className="text-[#F97316] text-sm">{phoneError}</p>
                 )}
 
                 {/* Password */}
-                <label className="mt-10">Your Password</label>
+                <label className="mt-4">Your Password</label>
                 <div className="relative">
                   <input
-                    type={showPassword ? "text" : "password"} // 👈 toggle type
+                    type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     value={password}
                     onChange={(e) => {
