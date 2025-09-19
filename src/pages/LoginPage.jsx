@@ -24,7 +24,7 @@ const LoginPage = () => {
   const navigate = useNavigate(); // ✅ ishlatamiz
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
+    const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -35,7 +35,7 @@ const LoginPage = () => {
   };
 
   const validatePhone = (val) => {
-    if (!val || val.length < 9) return "Invalid phone number";
+    if (!val || val.length < 12) return "Invalid phone number";
     return "";
   };
 
@@ -60,7 +60,7 @@ const LoginPage = () => {
         else if (role === "PARENTS") navigate("/user-dashboard");
         else setErrorMessage("⚠️ Noma'lum rol qaytdi.");
       } else {
-        setErrorMessage("❌ Login ma'lumotlari noto‘g‘ri.");
+        setErrorMessage("Login yoki password ma'lumotlari noto‘g‘ri.");
       }
     } catch (err) {
       console.error(err);
