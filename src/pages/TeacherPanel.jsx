@@ -1,47 +1,77 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const fakeData = {
-  "Guruhning egasi": [
-    { id: 1, team: "Foundation 1", type: "Front-end" },
-    { id: 2, team: "Foundation 2", type: "Back-end" },
-    { id: 3, team: "Foundation 3", type: "Python" },
-    { id: 4, team: "Foundation 4", type: "3D MAX" },
-    { id: 5, team: "Foundation 5", type: "Roboto-texnika" },
-    { id: 6, team: "Foundation 6", type: "Cyber" },
-  ],
-};
+const TeacherGroups = () => {
+  const [groups, setGroups] = useState([]);
+  const [error, setError] = useState(null);
+  const [name, setName] = useState("");
+  const navigate = useNavigate();
 
-const TeacherPanel = () => {
-  const handleClick = (team) => {
-    localStorage.setItem("Team", team);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login"); 
+      return;
+    }
+    axios
+      .get("http://167.86.121.42:8080/group?page=0&size=10", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        const body = res.data.data.body || [];
+        setGroups(body);
+        if (body.length > 0) setName(body[0].teacherName);
+      })
+      .catch((err) => {
+        setError(
+          `Xato: ${err.response?.status} ${
+            err.response?.data?.message || "So‘rov bajarilmadi"
+          }`
+        );
+      });
+  }, [navigate]);
+  const handleGoToGrade = (groupId) => {
+    navigate(`/teacher/grade/${groupId}`);
   };
 
   return (
-    <div className="max-w-[1300px] mx-auto">
-      <div className="flex flex-col items-center mt-12 mb-6 gap-2">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-400 bg-clip-text text-transparent">
-          Salom, {Object.keys(fakeData)}
-        </h1>
-        <p className="text-lg text-gray-700">Sizning guruhlaringiz!</p>
-      </div>
+    <div className="max-w-[1200px] mx-auto mt-8 px-4">
+      <h1 className="text-2xl font-bold mb-6">Salom {name}</h1>
+      {error && <p className="text-red-500">{error}</p>}
 
-      <div className="grid w-[90%] mx-auto lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6 mb-[2rem]">
-        {fakeData["Guruhning egasi"].map((item) => (
-          <Link
-            to={`/team/${item.id}`}
-            onClick={() => handleClick(item.team)}
-            key={item.id}
-            className="block rounded-2xl p-6 shadow-md bg-gradient-to-r from-emerald-500 to-green-400 
-                       text-white transition-all duration-300 hover:scale-105 hover:shadow-xl"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {groups.map((group) => (
+          <div
+            key={group.id}
+            className="bg-white shadow-md rounded-2xl p-6 border hover:shadow-lg transition"
           >
-            <h1 className="text-xl font-semibold">{item.team}</h1>
-            <p className="mt-2 opacity-90">{item.type}</p>
-          </Link>
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+              {group.name}
+            </h2>
+            <p className="text-gray-600">O'quvchilar: {group.studentCount}</p>
+            <div className="mt-4">
+              {group.weekDays?.map((day) => (
+                <span
+                  key={day}
+                  className="inline-block bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full mr-2"
+                >
+                  {day}
+                </span>
+              ))}
+            </div>
+            <button
+              onClick={() => handleGoToGrade(group.id)}
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Baholashga o‘tish
+            </button>
+          </div>
         ))}
       </div>
     </div>
   );
 };
 
-export default TeacherPanel;
+export default TeacherGroups;
