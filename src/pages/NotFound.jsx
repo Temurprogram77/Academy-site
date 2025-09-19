@@ -4,7 +4,7 @@ const NotFound = () => {
   return (
     <main className="grid min-h-full h-screen place-items-center bg-white px-6 py-24 sm:py-32 lg:px-8">
       <div className="text-center">
-        <p className="text-3xl font-semibold text-indigo-600">404</p>
+        <p className="text-3xl font-semibold from-emerald-900 to-green-400 bg-gradient-to-r bg-clip-text text-transparent">404</p>
         <h1 className="mt-4 text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-7xl">
           Page not found
         </h1>

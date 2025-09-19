@@ -14,9 +14,9 @@ const App = () => {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/user" element={<User />} />
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/teacher" element={<TeacherPanel />} />
+        <Route path="/user-dashboard" element={<User />} />
+        <Route path="/admin-dashboard" element={<AdminPanel />} />
+        <Route path="/teacher-dashboard" element={<TeacherPanel />} />
         <Route path="/team/:id" element={<LandingTeacher />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
