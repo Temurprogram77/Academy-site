@@ -6,7 +6,7 @@ import LandingPage from "./pages/LandingPage";
 import User from "./pages/User";
 import AdminPanel from "./pages/AdminPanel";
 import TeacherPanel from "./pages/TeacherPanel";
-import LandingTeacher from "./pages/LandingTeacher";
+import GradePage from "./pages/GradePage";
 
 const App = () => {
   return (
@@ -17,7 +17,7 @@ const App = () => {
         <Route path="/user-dashboard" element={<User />} />
         <Route path="/admin-dashboard" element={<AdminPanel />} />
         <Route path="/teacher-dashboard" element={<TeacherPanel />} />
-        <Route path="/team/:id" element={<LandingTeacher />} />
+        <Route path="/teacher/grade/:groupId" element={<GradePage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
