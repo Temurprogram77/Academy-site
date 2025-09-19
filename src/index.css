@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+.containerr {
+  @apply max-w-[1200px] mx-auto;
+}
+.btn-gradient {
+  @apply bg-gradient-to-r from-[#33db00] to-[#208a00];
+}
+/* Flag buttonni butunlay yo‘qotish */
+.react-tel-input .flag-dropdown {
+  display: none !important;
+}
+
+/* Inputni chap tarafdan to‘g‘ri ko‘rsatish */
+.react-tel-input .form-control {
+  padding-left: 1rem !important; /* chapdan bo‘sh joy qoldirish */
+  border-radius: 0.5rem !important;
+}
