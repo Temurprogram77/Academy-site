@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Player } from "@lottiefiles/react-lottie-player";
+import Animated from "../assets/Animated.json"; // json faylni joylashgan manzilingizga qarab o‘zgartiring
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(true);
@@ -22,12 +23,19 @@ const LoginPage = () => {
       <div className="flex flex-col md:flex-row items-center gap-10 w-full max-w-6xl">
         
         {/* Odamcha animatsiya */}
-        <Player
+        <div className="">
+          <Player
           autoplay
           loop
-          src="https://assets10.lottiefiles.com/packages/lf20_jcikwtux.json"
+          src={Animated}
           style={{ height: "350px", width: "350px" }}
         />
+        </div>
+        <div className="">
+          <div className="">
+            
+          </div>
+        </div>
       </div>
     </div>
   );
