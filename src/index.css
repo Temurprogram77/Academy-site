@@ -5,7 +5,7 @@
   @apply max-w-[1200px] mx-auto;
 }
 .btn-gradient {
-  @apply bg-gradient-to-r from-[#33db00] to-[#208a00];
+  @apply bg-gradient-to-r from-[#79a200] to-[#445700];
 }
 /* Flag buttonni butunlay yo‘qotish */
 .react-tel-input .flag-dropdown {
