@@ -128,7 +128,7 @@ const LoginPage = () => {
                 )}
 
                 {/* Password */}
-                <label>Your Password</label>
+                <label className="mt-10">Your Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"} // 👈 toggle type
