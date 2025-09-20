@@ -22,15 +22,14 @@ const AdminSidebar = () => {
 
   return (
     <div className="bg-white h-screen w-72 shadow-md">
-      <div className="p-4 border-b-2 border-[#0000001f] w-full flex justify-start">
-        <Link to="/admin-dashboard">
-          <img src={logo} alt="logo" className="w-[180px]" />
-        </Link>
-      </div>
-
-      <div className="flex flex-col gap-3 py-6">
-        <div className="flex flex-col gap-3 py-6">
-          <Link to="/admin-dashboard" className="w-full px-5">
+      <div className="gap-3 flex flex-col justify-between h-full py-4">
+        <div className="flex flex-col gap-3">
+          <div className="p-4 border-b-2 border-[#0000001f] w-full flex justify-start">
+            <Link to="/admin-dashboard mt-4">
+              <img src={logo} alt="logo" className="w-[180px]" />
+            </Link>
+          </div>
+          <Link to="/admin-dashboard" className="w-full px-5 mt-5">
             <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl bg-[#F3F4F6] hover:text-white duration-300 hover:bg-[#5DB445]">
               <TiHomeOutline />
               Dashboard
@@ -67,16 +66,18 @@ const AdminSidebar = () => {
             </div>
           </Link>
         </div>
-        <div className="w-full px-5 cursor-pointer" onClick={handleLogout}>
-          <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl bg-[#F3F4F6] hover:text-white duration-300 hover:bg-[#5DB445]">
-            <LuSunMoon />
-            Mavzu
+        <div className="flex flex-col gap-3">
+          <div className="w-full px-5 cursor-pointer" onClick={handleLogout}>
+            <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl bg-[#F3F4F6] hover:text-white duration-300 hover:bg-[#5DB445]">
+              <LuSunMoon />
+              Mavzu
+            </div>
           </div>
-        </div>
-        <div className="w-full px-5 cursor-pointer" onClick={handleLogout}>
-          <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl bg-[#F3F4F6] hover:text-white duration-300 hover:bg-[#5DB445]">
-            <FiLogOut />
-            Log Out
+          <div className="w-full px-5 cursor-pointer" onClick={handleLogout}>
+            <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl bg-[#F3F4F6] hover:text-white duration-300 hover:bg-[#5DB445]">
+              <FiLogOut />
+              Chiqish
+            </div>
           </div>
         </div>
       </div>
