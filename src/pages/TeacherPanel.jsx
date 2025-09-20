@@ -6,15 +6,17 @@ const TeacherGroups = () => {
   const [groups, setGroups] = useState([]);
   const [error, setError] = useState(null);
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      navigate("/login"); 
+      navigate("/login");
       return;
     }
+
     axios
       .get("http://167.86.121.42:8080/group?page=0&size=10", {
         headers: { Authorization: `Bearer ${token}` },
@@ -27,48 +29,64 @@ const TeacherGroups = () => {
       .catch((err) => {
         setError(
           `Xato: ${err.response?.status} ${
-            err.response?.data?.message || "So‘rov bajarilmadi"
+           "So‘rov bajarilmadi"
           }`
         );
-      });
+      })
+      .finally(() => setLoading(false));
   }, [navigate]);
+
   const handleGoToGrade = (groupId) => {
     navigate(`/teacher/grade/${groupId}`);
   };
 
-  return (
-    <div className="max-w-[1200px] mx-auto mt-8 px-4">
-      <h1 className="text-2xl font-bold mb-6">Salom {name}</h1>
-      {error && <p className="text-red-500">{error}</p>}
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gradient-to-r from-green-400 via-green-500 to-green-600">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+      </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {groups.map((group) => (
-          <div
-            key={group.id}
-            className="bg-white shadow-md rounded-2xl p-6 border hover:shadow-lg transition"
-          >
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
-              {group.name}
-            </h2>
-            <p className="text-gray-600">O'quvchilar: {group.studentCount}</p>
-            <div className="mt-4">
-              {group.weekDays?.map((day) => (
-                <span
-                  key={day}
-                  className="inline-block bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full mr-2"
-                >
-                  {day}
-                </span>
-              ))}
-            </div>
-            <button
-              onClick={() => handleGoToGrade(group.id)}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+  return (
+    <div className="mt-[3rem]">
+      <div className=" max-w-[1300px] mx-auto px-4">
+        <h1 className="text-4xl font-bold text-green-400 text-center">
+          Salom, {name}
+        </h1>
+      <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500 mt-[1rem] mb-[1rem]">
+        Sizning guruhlaringiz:
+      </h1>
+        {error && (
+          <p className="text-red-500 bg-white/30 backdrop-blur-md p-3 rounded-md mb-6">
+            {error}
+          </p>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-[1rem]">
+          {groups.map((group) => (
+            <div
+              key={group.id}
+              className="bg-white/80 backdrop-blur-md border border-[2px] rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-500"
             >
-              Baholashga o‘tish
-            </button>
-          </div>
-        ))}
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                {group.name}
+              </h2>
+              <p className="text-gray-700 mb-2 text-[1.2rem]">
+                O‘qituvchi: <span className="font-medium">{group.teacherName}</span>
+              </p>
+              <p className="text-gray-700 mb-3">
+                O‘quvchilar: <span className="font-medium">{group.studentCount}</span>
+              </p>
+              <button
+                onClick={() => handleGoToGrade(group.id)}
+                className="w-full py-2 rounded-lg text-white font-semibold bg-green-500"
+              >
+                Baholashga o‘tish
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
