@@ -48,7 +48,7 @@ const TeacherGroups = () => {
         <h1 className="text-4xl font-bold text-green-400 text-center">
           Salom, {name}
         </h1>
-      <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500 mt-[1rem] mb-[1rem]">
+      <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500 mt-[1rem] mb-[2rem]">
         Sizning guruhlaringiz:
       </h1>
         {error && (

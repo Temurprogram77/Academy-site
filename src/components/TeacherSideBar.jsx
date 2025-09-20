@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import dataImages from "../assets/images";
 import { FaHouse } from "react-icons/fa6";
@@ -8,23 +8,25 @@ import { GiExitDoor } from "react-icons/gi";
 const TeacherSideBar = () => {
   const navigate = useNavigate();
   const logo = dataImages.logo;
+
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       navigate("/login");
       return;
     }
   }, [navigate]);
+
   const handleClick = () => {
     localStorage.clear();
     navigate("/login");
   };
+
   return (
-    <aside className="w-64 text-green-300 border flex-shrink-0 h-screen p-6 overflow-y-auto">
-      <img src={logo} className="cursor-pointer" />
+    <aside className="w-64 text-green-300 border flex-shrink-0 h-screen p-6 flex flex-col">
+      <img src={logo} className="cursor-pointer mb-4" />
       <hr />
-      <nav className="flex flex-col mt-[2rem] gap-3">
+      <nav className="flex flex-col mt-[2rem] gap-3 flex-1">
         <NavLink
           to="/teacher-dashboard"
           end
@@ -36,6 +38,7 @@ const TeacherSideBar = () => {
         >
           <FaHouse /> Dashboard
         </NavLink>
+
         <NavLink
           to="/teacher-dashboard/grade"
           end
@@ -47,13 +50,14 @@ const TeacherSideBar = () => {
         >
           <MdGrade /> Baholar
         </NavLink>
-        <button
-          className="px-3 py-2 rounded flex gap-[0.5rem] font-semibold justify-start items-center text-[1rem] text-white bg-green-500 transition"
-          onClick={handleClick}
-        >
-          <GiExitDoor /> Chiqish
-        </button>
       </nav>
+
+      <button
+        className="px-3 py-2 rounded flex gap-[0.5rem] font-semibold justify-start items-center text-[1rem] text-white bg-green-500 transition"
+        onClick={handleClick}
+      >
+        <GiExitDoor /> Chiqish
+      </button>
     </aside>
   );
 };
