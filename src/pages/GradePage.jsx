@@ -63,7 +63,6 @@ const GradePage = () => {
       </div>
     );
   }
-console.log(students);
 
   return (
     <div className="p-4">
