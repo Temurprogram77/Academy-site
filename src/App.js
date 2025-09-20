@@ -1,7 +1,5 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Sahifalar
 import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
@@ -10,28 +8,25 @@ import AdminPanel from "./pages/AdminPanel";
 import TeacherPanel from "./pages/TeacherPanel";
 import GradePage from "./pages/GradePage";
 
-// Admin panel sahifalari
 import Dashboard from "./pages/admin/Dashboard";
 import Teachers from "./pages/admin/Teachers";
 import Parents from "./pages/admin/Parents";
 import Students from "./pages/admin/Students";
 import Rooms from "./pages/admin/Rooms";
 import Teams from "./pages/admin/Teams";
+import TeacherGroups from "./pages/TeacherGroups";
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Umumiy sahifalar */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/user-dashboard" element={<User />} />
         <Route path="/admin-dashboard" element={<AdminPanel />} />
 
-        {/* Foydalanuvchi dashboard */}
         <Route path="/user-dashboard" element={<User />} />
 
-        {/* Admin panel routelari */}
         <Route path="/admin-dashboard" element={<AdminPanel />}>
           <Route index element={<Dashboard />} />
           <Route path="teachers" element={<Teachers />} />
@@ -41,10 +36,11 @@ const App = () => {
           <Route path="teams" element={<Teams />} />
         </Route>
 
-        {/* O‘qituvchi dashboard */}
-        <Route path="/teacher-dashboard" element={<TeacherPanel />} />
+         <Route path="/teacher-dashboard" element={<TeacherPanel />}>
+          <Route index element={<TeacherGroups />} /> 
+          <Route path="grade/:groupId" element={<GradePage />} />
+        </Route>
 
-        {/* 404 sahifa */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
