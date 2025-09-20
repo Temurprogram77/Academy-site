@@ -32,7 +32,7 @@ const LoginPage = () => {
       if (role === "ADMIN") navigate("/admin-dashboard");
       else if (role === "TEACHER") navigate("/teacher-dashboard");
       else if (role === "USER") navigate("/user-dashboard");
-      else if (role === "PARENTS") navigate("/user-dashboard");
+      else if (role === "PARENT") navigate("/user-dashboard");
     } else {
       setLoading(false); // login sahifasi ko‘rinsin
     }
@@ -64,7 +64,7 @@ const LoginPage = () => {
         if (role === "ADMIN") navigate("/admin-dashboard");
         else if (role === "TEACHER") navigate("/teacher-dashboard");
         else if (role === "USER") navigate("/user-dashboard");
-        else if (role === "PARENTS") navigate("/user-dashboard");
+        else if (role === "PARENT") navigate("/user-dashboard");
         else setErrorMessage("⚠️ Noma'lum rol qaytdi.");
       } else {
         setErrorMessage("Telefon nomer yoki password noto‘g‘ri.");
