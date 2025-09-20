@@ -5,8 +5,8 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import dataImages from "../assets/images";
-import axios from "axios"; // ✅ axios qo‘shildi
-import { useNavigate } from "react-router-dom"; // ✅ navigate qo‘shildi
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const { logo } = dataImages;
 
@@ -21,12 +21,22 @@ const LoginPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const navigate = useNavigate(); // ✅ ishlatamiz
+  const navigate = useNavigate();
 
+  // ✅ Agar token va role bo‘lsa, to‘g‘ri panelga yuboramiz
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (token && role) {
+      if (role === "ADMIN") navigate("/admin-dashboard");
+      else if (role === "TEACHER") navigate("/teacher-dashboard");
+      else if (role === "USER") navigate("/user-dashboard");
+      else if (role === "PARENTS") navigate("/user-dashboard");
+    } else {
+      setLoading(false); // login sahifasi ko‘rinsin
+    }
+  }, [navigate]);
 
   const validatePassword = (val) => {
     if (!val) return "Password is required";
@@ -45,10 +55,7 @@ const LoginPage = () => {
         `http://167.86.121.42:8080/auth/login?phone=${phone}&password=${password}`
       );
 
-      console.log(res.data);
-
       if (res.data.success) {
-        // token va role saqlaymiz
         localStorage.setItem("token", res.data.data);
         localStorage.setItem("role", res.data.message);
 
@@ -60,7 +67,7 @@ const LoginPage = () => {
         else if (role === "PARENTS") navigate("/user-dashboard");
         else setErrorMessage("⚠️ Noma'lum rol qaytdi.");
       } else {
-        setErrorMessage("Telefon nomer yoki password ma'lumotlari noto‘g‘ri.");
+        setErrorMessage("Telefon nomer yoki password noto‘g‘ri.");
       }
     } catch (err) {
       console.error(err);
@@ -95,7 +102,7 @@ const LoginPage = () => {
               <div className="bg-white rounded-xl p-10 w-full h-full flex flex-col justify-center">
                 <form
                   onSubmit={(e) => {
-                    e.preventDefault(); // sahifa yangilanmasligi uchun
+                    e.preventDefault();
                     handleContinue();
                   }}
                 >
@@ -186,9 +193,8 @@ const LoginPage = () => {
 
                   {/* Button */}
                   <button
-                    type="submit" // 👈 submit qilib qo‘ydik
-                    className="w-full mt-5 text-white py-2.5 rounded-lg font-semibold transition cursor-pointer
-          bg-gradient-to-r btn-gradient"
+                    type="submit"
+                    className="w-full mt-5 text-white py-2.5 rounded-lg font-semibold transition cursor-pointer bg-gradient-to-r btn-gradient"
                   >
                     Continue
                   </button>
