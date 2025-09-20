@@ -38,15 +38,9 @@ const TeacherGroups = () => {
 
   const handleGoToGrade = (groupId) => {
     navigate(`/teacher/grade/${groupId}`);
+    localStorage.setItem("groupId",groupId)
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-r from-green-400 via-green-500 to-green-600">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="mt-[3rem]">
