@@ -23,7 +23,7 @@ const TeacherSideBar = () => {
   };
 
   return (
-    <aside className="w-64 text-green-300 border flex-shrink-0 h-screen p-6 flex flex-col">
+    <aside className="w-[20rem] text-green-300 border flex-shrink-0 h-screen p-6 flex flex-col">
       <img src={logo} className="cursor-pointer mb-4" />
       <hr />
       <nav className="flex flex-col mt-[2rem] gap-3 flex-1">
@@ -40,7 +40,7 @@ const TeacherSideBar = () => {
         </NavLink>
 
         <NavLink
-          to="/teacher-dashboard/grade"
+          to="/teacher-dashboard/gradies"
           end
           className={({ isActive }) =>
             `px-3 py-2 rounded flex gap-[0.5rem] font-semibold justify-start items-center text-[1rem] text-white bg-green-500 hover:bg-green-500 transition ${
