@@ -61,7 +61,7 @@ const TeacherGroups = () => {
           {groups.map((group) => (
             <div
               key={group.id}
-              className="bg-white/80 backdrop-blur-md border border-[2px] rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-500"
+              className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-500"
             >
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">
                 {group.name}
