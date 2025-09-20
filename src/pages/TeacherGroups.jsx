@@ -37,7 +37,7 @@ const TeacherGroups = () => {
   }, [navigate]);
 
   const handleGoToGrade = (groupId) => {
-    navigate(`/teacher/grade/${groupId}`);
+    navigate(`/teacher-dashboard/grade/${groupId}`);
     localStorage.setItem("groupId",groupId)
   };
 
