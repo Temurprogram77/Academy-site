@@ -43,6 +43,12 @@ const AdminSidebar = () => {
                 "/admin-dashboard"
               )}`}
             >
+            <Link to="/admin-dashboard mt-4">
+              <img src={logo} alt="logo" className="w-[180px]" />
+            </Link>
+          </div>
+          <Link to="/admin-dashboard" className="w-full px-5 mt-5">
+            <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl bg-[#F3F4F6] hover:text-white duration-300 hover:bg-[#5DB445]">
               <TiHomeOutline />
               Dashboard
             </div>
@@ -117,12 +123,13 @@ const AdminSidebar = () => {
 
         <div className="flex flex-col gap-3">
           <div className="w-full px-5 cursor-pointer">
+        <div className="flex flex-col gap-3">
+          <div className="w-full px-5 cursor-pointer" onClick={handleLogout}>
             <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl bg-[#F3F4F6] hover:text-white duration-300 hover:bg-[#5DB445]">
               <LuSunMoon />
               Mavzu
             </div>
           </div>
-
           <div className="w-full px-5 cursor-pointer" onClick={handleLogout}>
             <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl bg-[#F3F4F6] hover:text-white duration-300 hover:bg-[#5DB445]">
               <FiLogOut />
