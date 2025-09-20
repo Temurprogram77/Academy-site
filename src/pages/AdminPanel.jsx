@@ -19,8 +19,8 @@ const AdminPanel = () => {
       {/* Sidebar doimiy turadi */}
       <AdminSidebar />
 
-      {/* Kontent qismi faqat Outlet orqali almashadi */}
-      <main className="flex-1 p-6 bg-gray-100">
+      {/* Kontent qismi  faqatOutlet orqali almashadi */}
+      <main className="flex-1 bg-gray-100">
         <Outlet />
       </main>
     </div>

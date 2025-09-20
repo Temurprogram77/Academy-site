@@ -60,7 +60,7 @@ const LoginPage = () => {
         else if (role === "PARENTS") navigate("/user-dashboard");
         else setErrorMessage("⚠️ Noma'lum rol qaytdi.");
       } else {
-        setErrorMessage("Login yoki password ma'lumotlari noto‘g‘ri.");
+        setErrorMessage("Telefon nomer yoki password ma'lumotlari noto‘g‘ri.");
       }
     } catch (err) {
       console.error(err);
@@ -90,8 +90,6 @@ const LoginPage = () => {
             />
           </div>
 
-          {/* Login form */}
-          {/* Login form */}
           <div className="border-l-2 justify-center 2xl:w-[800px] h-[450px]">
             <div className="w-full p-1 rounded-xl h-full">
               <div className="bg-white rounded-xl p-10 w-full h-full flex flex-col justify-center">
@@ -105,7 +103,7 @@ const LoginPage = () => {
                     <img
                       src={logo}
                       alt="Logo"
-                      className="w-[500px] h-[160px]"
+                      className="w-[500px] md:h-[160px]"
                     />
                   </div>
                   <h2 className="text-3xl font-semibold text-center my-4">
