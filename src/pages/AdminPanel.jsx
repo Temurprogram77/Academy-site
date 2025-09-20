@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import AdminSidebar from "../components/AdminSidebar";
 
 const AdminPanel = () => {
@@ -9,15 +9,20 @@ const AdminPanel = () => {
     const role = localStorage.getItem("role");
     const token = localStorage.getItem("token");
 
-    // Shartni tekshirish
     if (!role || !token || role.trim() === "" || token.trim() === "") {
       navigate("/login");
     }
   }, [navigate]);
 
   return (
-    <div>
+    <div className="flex h-screen">
+      {/* Sidebar doimiy turadi */}
       <AdminSidebar />
+
+      {/* Kontent qismi  faqatOutlet orqali almashadi */}
+      <main className="flex-1 bg-gray-100">
+        <Outlet />
+      </main>
     </div>
   );
 };
