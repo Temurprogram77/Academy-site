@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import TeacherSideBar from "../components/TeacherSideBar";
+import TeacherNavbar from "../components/TeacherNavbar";
 import { Outlet } from "react-router-dom";
 import { FaBars } from "react-icons/fa";
 
@@ -13,21 +14,24 @@ const TeacherPanel = () => {
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      <main className="flex-1 p-4 bg-gray-100 overflow-y-auto">
-        <div className="md:hidden flex items-center mb-4">
-          <button
-            className="text-green-700 text-2xl"
-            onClick={() => setIsSidebarOpen(true)}
-          >
-            <FaBars />
-          </button>
-          <h1 className="ml-4 text-xl font-bold text-green-700">
-            Teacher Panel
-          </h1>
-        </div>
+      <div className="flex-1 flex flex-col">
+        <TeacherNavbar />
+        <main className="flex-1 p-4 bg-gray-100 overflow-y-auto">
+          <div className="md:hidden flex items-center mb-4">
+            <button
+              className="text-green-700 text-2xl"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <FaBars />
+            </button>
+            <h1 className="ml-4 text-xl font-bold text-green-700">
+              Teacher Panel
+            </h1>
+          </div>
 
-        <Outlet />
-      </main>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
