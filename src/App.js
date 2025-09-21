@@ -19,7 +19,6 @@ import Gradies from "./pages/Gradies";
 import Profile from "./pages/Profile";
 import AdminProfile from "./pages/admin/Profile"; 
 import { Toaster } from "sonner";
-import Profile from "./pages/admin/Profile";
 
 
 const App = () => {
