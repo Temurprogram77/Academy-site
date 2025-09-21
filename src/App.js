@@ -19,6 +19,7 @@ import Gradies from "./pages/Gradies";
 import Profile from "./pages/Profile";
 import AdminProfile from "./pages/admin/Profile"; 
 import { Toaster } from "sonner";
+import UserDetail from "./pages/UserDetail";
 
 
 const App = () => {
@@ -30,6 +31,7 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
 
         <Route path="/user-dashboard" element={<User />} />
+        <Route path="/:id" element={<UserDetail />} />
 
         <Route path="/admin-dashboard" element={<AdminPanel />}>
           <Route index element={<Dashboard />} />
