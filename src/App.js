@@ -15,9 +15,18 @@ import Students from "./pages/admin/Students";
 import Rooms from "./pages/admin/Rooms";
 import Teams from "./pages/admin/Teams";
 import TeacherGroups from "./pages/TeacherGroups";
+<<<<<<< HEAD
 import Gradies from "./pages/Gradies";
 import Profile from "./pages/Profile";
 import { Toaster } from "sonner";
+=======
+<<<<<<< HEAD
+=======
+import Gradies from "./pages/Gradies";
+import Profile from "./pages/Profile";
+>>>>>>> 6f81063c (added)
+import Profile from "./pages/admin/Profile";
+>>>>>>> 949ce79f94ab26470e79335bbef2e666d5636fcf
 
 const App = () => {
   return (
@@ -38,6 +47,7 @@ const App = () => {
           <Route path="students" element={<Students />} />
           <Route path="rooms" element={<Rooms />} />
           <Route path="teams" element={<Teams />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
          <Route path="/teacher-dashboard" element={<TeacherPanel />}>

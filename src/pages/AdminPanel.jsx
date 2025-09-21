@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminNavbar from "../components/AdminNavbar";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const AdminPanel = () => {
 
       {/* Kontent qismi  faqatOutlet orqali almashadi */}
       <main className="flex-1 bg-gray-100">
+        <AdminNavbar/>
         <Outlet />
       </main>
     </div>
