@@ -17,7 +17,6 @@ function UserDetail() {
   const fetchUserDetail = async () => {
     setLoading(true)
     try {
-      // Mock API call - siz o'zingizning API endpointingizni qo'ying
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       const mockData = {

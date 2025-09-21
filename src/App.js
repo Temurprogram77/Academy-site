@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import AdminProfile from "./pages/admin/Profile"; 
 import { Toaster } from "sonner";
 import UserDetail from "./pages/UserDetail";
+import ScoreHistory from "./pages/ScoreHistory";
 
 
 const App = () => {
@@ -32,6 +33,7 @@ const App = () => {
 
         <Route path="/user-dashboard" element={<User />} />
         <Route path="/:id" element={<UserDetail />} />
+        <Route path="/ScoreHistory/:id" element={<ScoreHistory/>}/>
 
         <Route path="/admin-dashboard" element={<AdminPanel />}>
           <Route index element={<Dashboard />} />

@@ -13,18 +13,15 @@ function User() {
 
   // 🔥 Yangi state
   const [marks, setMarks] = useState([])
-  console.log(marks);
-  
   const [marksLoading, setMarksLoading] = useState(true)
 
   const navigate = useNavigate()
 
   useEffect(() => {
     fetchLeaderboard()
-    fetchMyMarks()   // ✅ My Marks ham yuklanadi
+    fetchMyMarks()
   }, [])
 
-  // Reytingni olish
   const fetchLeaderboard = async () => {
     setLeaderboardLoading(true)
     try {
@@ -63,7 +60,6 @@ function User() {
     }
   }
 
-  // ✅ My Marks olish
   const fetchMyMarks = async () => {
     setMarksLoading(true)
     try {
@@ -98,7 +94,26 @@ function User() {
       setMarksLoading(false)
     }
   }
-  
+  const getMyId = () => {
+    if (marks?.length) {
+      if (marks[0]?.studentId) return marks[0].studentId
+      if (marks[0]?.student?.id) return marks[0].student.id
+      if (marks[0]?.userId) return marks[0].userId
+    }
+    if (players?.length) {
+      return players[0]?.id ?? null
+    }
+    return null
+  }
+
+  const handleBallTarixiClick = () => {
+    const myId = getMyId()
+    if (myId) {
+      navigate(`/ScoreHistory/${myId}`)
+    } else {
+      navigate("/ScoreHistory")
+    }
+  }
 
   const fetchUserProfile = async (userId = 1) => {
     setLoading(true)
@@ -252,28 +267,42 @@ function User() {
           <div className="text-center mb-6">
             <h2 className="text-xl font-bold text-green-600">Reyting jadvali</h2>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-6">
-          <div
-  className={`
-    rounded-2xl p-6 shadow-lg flex flex-col items-center justify-center
-    ${marks.length
-      ? marks[0].level === "YASHIL"
-        ? "bg-green-600 text-white" 
-        : marks[0].level === "QIZIL"
-          ? "bg-red-600 text-white"
-          : marks[0].level === "SARIQ"
-            ? "bg-yellow-500 text-white"
-            : "bg-gray-400 text-white"
-      : "bg-gray-400 text-white"}
-  `}
->
-  
-</div>
 
-  <div className="bg-green-600 text-white rounded-2xl p-6 shadow-lg flex flex-col items-center justify-center">
-    <span className="text-3xl font-bold">{marks[0].score}</span>
-  </div>
-</div>
+          <div className="flex flex-col gap-4">
+            
+            <div
+              onClick={handleBallTarixiClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter") handleBallTarixiClick() }}
+              className={`bg-green-600 text-white rounded-2xl p-6 shadow-lg flex flex-col items-center justify-center cursor-pointer select-none transition-transform transform
+                ${marksLoading ? "opacity-60 pointer-events-none" : "hover:scale-[1.02]"}`}
+            >
+              <span className="text-3xl font-bold">Ball Tarixi</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div
+                className={`
+                  rounded-2xl p-6 shadow-lg flex flex-col items-center justify-center
+                  ${marks.length
+                    ? marks[0].level === "YASHIL"
+                      ? "bg-green-600 text-white"
+                      : marks[0].level === "QIZIL"
+                        ? "bg-red-600 text-white"
+                        : marks[0].level === "SARIQ"
+                          ? "bg-yellow-500 text-white"
+                          : "bg-gray-400 text-white"
+                    : "bg-gray-400 text-white"}
+                `}
+              >
+              </div>
+
+              <div className="bg-green-600 text-white rounded-2xl p-6 shadow-lg flex flex-col items-center justify-center">
+                <span className="text-3xl font-bold">{marks?.[0]?.score ?? 0}</span>
+              </div>
+            </div>
+          </div>
 
           {leaderboardLoading ? (
             <div className="flex justify-center items-center py-8">
