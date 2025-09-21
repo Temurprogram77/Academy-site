@@ -4,9 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { IoMdCloseCircle } from "react-icons/io";
 import { FaPencilAlt } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import { toast } from "sonner";
 
 const TeacherGroups = () => {
-  const [groups, setGroups] = useState([]);
+  const [marks, setMarks] = useState([]);
   const [error, setError] = useState(null);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -22,59 +23,49 @@ const TeacherGroups = () => {
 
   const token = localStorage.getItem("token");
 
+  const fetchMarks = async () => {
+    try {
+      const res = await axios.get("http://167.86.121.42:8080/mark/myMarks", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const body = res.data.data || [];
+      if (body.length > 0) setName(body[0].teacherName);
+      setMarks(body);
+    } catch (err) {
+      setError(
+        `Xato: ${err.response?.status || ""} ${
+          err.message || "So‘rov bajarilmadi"
+        }`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       navigate("/login", { replace: true });
       return;
     }
-
-    const fetchMarks = async () => {
-      try {
-        const res = await axios.get("http://167.86.121.42:8080/mark/myMarks", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const body = res.data.data || [];
-        if (body.length > 0) setName(body[0].teacherName);
-
-        const detailedMarks = await Promise.all(
-          body.map((g) =>
-            axios
-              .get(`http://167.86.121.42:8080/mark/${g.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-              .then((r) => r.data.data)
-              .catch(() => null)
-          )
-        );
-
-        setGroups(detailedMarks.filter((m) => m !== null));
-      } catch (err) {
-        setError(
-          `Xato: ${err.response?.status || ""} ${
-            err.message || "So‘rov bajarilmadi"
-          }`
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMarks();
   }, [navigate, token]);
 
-  const handleDelete = async () => {
-    try {
-      await axios.delete(`http://167.86.121.42:8080/mark/${selectedMark.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+const handleDelete = async () => {
+  try {
+    await axios.delete(`http://167.86.121.42:8080/mark/${selectedMark.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      setGroups(groups.filter((g) => g.id !== selectedMark.id));
-      setShowDeleteModal(false);
-    } catch (error) {
-      console.error("O‘chirishda xatolik:", error);
-    }
-  };
+    setShowDeleteModal(false);
+    await fetchMarks();
+    toast.success("Baho muvaffaqiyatli o‘chirildi!");
+  } catch (error) {
+    console.error("O‘chirishda xatolik:", error);
+    toast.error("Baho o‘chirilmadi!");
+  }
+};
+
 
   const handleEdit = async () => {
     try {
@@ -86,25 +77,15 @@ const TeacherGroups = () => {
           activityScore: Number(formData.activityScore),
           attendanceScore: Number(formData.attendanceScore),
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const updated = await axios.get(
-        `http://167.86.121.42:8080/mark/${selectedMark.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      setGroups(
-        groups.map((g) => (g.id === selectedMark.id ? updated.data.data : g))
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setShowEditModal(false);
+      await fetchMarks(); 
+      toast.success("Baho muvaffaqiyatli yangilandi!");
     } catch (error) {
       console.error("Tahrirlashda xatolik:", error);
+      toast.error("Baho yangilanmadi!");
     }
   };
 
@@ -137,7 +118,7 @@ const TeacherGroups = () => {
       </div>
     );
   }
-  if (groups.length === 0) {
+  if (marks.length === 0) {
     return (
       <div className="flex justify-center items-center h-[50vh]">
         <h1 className="text-2xl font-bold text-gray-600">
@@ -163,50 +144,37 @@ const TeacherGroups = () => {
         )}
 
         <div className="grid grid-cols-1 gap-6 mt-[1rem]">
-          {groups.map((group) => (
+          {marks.map((mark) => (
             <div
-              key={group.id}
+              key={mark.id}
               className="gap-[1rem] flex flex-col md:flex-row md:justify-between md:items-center text-gray-600 font-semibold text-xl rounded-2xl shadow-lg p-5 hover:shadow-2xl transition duration-300"
             >
               <div>
-                <p>Ism: {group.studentName}</p>
-                <p>Umumiy baho: {group.totalScore}</p>
+                <p>Ism: {mark.studentName}</p>
+                <p>Umumiy baho: {mark.totalScore ?? mark.score ?? "—"}</p>
                 <p>
                   Daraja:{" "}
-                  <span className={getLevelColor(group.level)}>
-                    {group.level}
+                  <span className={getLevelColor(mark.level)}>
+                    {mark.level}
                   </span>
                 </p>
                 <p>
                   Sana:{" "}
-                  {group.date
-                    ? new Date(group.date).toLocaleDateString("uz-UZ")
+                  {mark.date
+                    ? new Date(mark.date).toLocaleDateString("uz-UZ")
                     : "Noma’lum"}
                 </p>
               </div>
               <div className="flex gap-3 mt-4 md:mt-0">
                 <button
-                  onClick={async () => {
-                    try {
-                      const res = await axios.get(
-                        `http://167.86.121.42:8080/mark/${group.id}`,
-                        {
-                          headers: { Authorization: `Bearer ${token}` },
-                        }
-                      );
-                      setSelectedMark(res.data.data);
-                      setFormData({
-                        homeworkScore:
-                          res.data.data.homeworkScore?.toString() || "",
-                        activityScore:
-                          res.data.data.activityScore?.toString() || "",
-                        attendanceScore:
-                          res.data.data.attendanceScore?.toString() || "",
-                      });
-                      setShowEditModal(true);
-                    } catch (err) {
-                      console.error("Markni olishda xatolik:", err);
-                    }
+                  onClick={() => {
+                    setSelectedMark(mark);
+                    setFormData({
+                      homeworkScore: mark.homeworkScore?.toString() || "",
+                      activityScore: mark.activityScore?.toString() || "",
+                      attendanceScore: mark.attendanceScore?.toString() || "",
+                    });
+                    setShowEditModal(true);
                   }}
                   className="bg-gradient-to-r from-green-400 to-green-600 w-[60px] h-[40px] flex justify-center items-center text-white rounded-lg hover:opacity-90 transition"
                 >
@@ -214,7 +182,7 @@ const TeacherGroups = () => {
                 </button>
                 <button
                   onClick={() => {
-                    setSelectedMark(group);
+                    setSelectedMark(mark);
                     setShowDeleteModal(true);
                   }}
                   className="bg-gradient-to-r from-red-400 to-red-600 w-[60px] h-[40px] flex justify-center items-center text-white rounded-lg hover:opacity-90 transition"
@@ -261,7 +229,6 @@ const TeacherGroups = () => {
             </div>
           </div>
         )}
-
         {showEditModal && (
           <div
             className="fixed inset-0 bg-black/50 flex justify-center items-center z-[100]"

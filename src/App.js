@@ -17,10 +17,12 @@ import Teams from "./pages/admin/Teams";
 import TeacherGroups from "./pages/TeacherGroups";
 import Gradies from "./pages/Gradies";
 import Profile from "./pages/Profile";
+import { Toaster } from "sonner";
 
 const App = () => {
   return (
     <Router>
+    <Toaster position="bottom-right" richColors reverseOrder={false} />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />

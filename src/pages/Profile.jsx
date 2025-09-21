@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { IoMdCloseCircle } from "react-icons/io";
+import { toast } from "sonner";
 
 const TeacherProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -30,6 +31,7 @@ const TeacherProfile = () => {
         });
       } catch (err) {
         console.error("Profilni olishda xatolik:", err);
+        toast.error("Profilni yuklashda xatolik ❌");
       } finally {
         setLoading(false);
       }
@@ -50,8 +52,10 @@ const TeacherProfile = () => {
       );
       setProfile(formData);
       setEditing(false);
+      toast.success("Profil muvaffaqiyatli tahrirlandi!");
     } catch (err) {
       console.error("Profilni yangilashda xatolik:", err);
+      toast.error("Profilni yangilashda xatolik ❌");
     }
   };
 
@@ -94,7 +98,7 @@ const TeacherProfile = () => {
             </div>
             <div className="flex justify-between border-b pb-1">
               <strong>Rol:</strong>
-              <span>{profile.role}</span>
+              <span>{role}</span>
             </div>
             <button
               onClick={() => setEditing(true)}
