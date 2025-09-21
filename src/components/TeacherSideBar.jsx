@@ -84,7 +84,7 @@ const TeacherSideBar = ({ isOpen, onClose }) => {
         <GiExitDoor /> Chiqish
       </button>
     </aside>
-  );
+  ); 
 };
 
 export default TeacherSideBar;
