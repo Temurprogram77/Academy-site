@@ -15,6 +15,7 @@ import Students from "./pages/admin/Students";
 import Rooms from "./pages/admin/Rooms";
 import Teams from "./pages/admin/Teams";
 import TeacherGroups from "./pages/TeacherGroups";
+import Profile from "./pages/admin/Profile";
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="students" element={<Students />} />
           <Route path="rooms" element={<Rooms />} />
           <Route path="teams" element={<Teams />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
          <Route path="/teacher-dashboard" element={<TeacherPanel />}>

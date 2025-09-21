@@ -8,7 +8,7 @@ import { LuSunMoon } from "react-icons/lu";
 import { TiHomeOutline } from "react-icons/ti";
 import { MdMeetingRoom } from "react-icons/md";
 import { AiOutlineTeam } from "react-icons/ai";
-
+import { User } from "lucide-react";
 const { logo } = dataImages;
 
 const AdminSidebar = () => {
@@ -45,6 +45,17 @@ const AdminSidebar = () => {
             >
               <TiHomeOutline />
               Dashboard
+            </div>
+          </Link>
+
+          <Link to="/admin-dashboard/profile" className="w-full px-5">
+            <div
+              className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl duration-300 ${isActive(
+                "/admin-dashboard/profile"
+              )}`}
+            >
+              <User size={16} />
+              Profile
             </div>
           </Link>
 
