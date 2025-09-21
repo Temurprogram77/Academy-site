@@ -4,6 +4,7 @@ import dataImages from "../assets/images";
 import { FaHouse } from "react-icons/fa6";
 import { MdGrade } from "react-icons/md";
 import { GiExitDoor } from "react-icons/gi";
+import { IoMdCloseCircle } from "react-icons/io";
 
 const TeacherSideBar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -12,23 +13,24 @@ const TeacherSideBar = ({ isOpen, onClose }) => {
   const handleClick = () => {
     localStorage.clear();
     navigate("/login");
+    onClose(); 
   };
 
   return (
     <aside
       className={`
-        fixed top-0 left-0 h-full w-[16rem] bg-green-700 text-white p-6 flex flex-col transform transition-transform duration-300 z-50
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        md:relative md:translate-x-0 md:w-[20rem]
+        fixed top-0 left-0 h-full bg-white text-white p-6 flex flex-col transform transition-transform duration-300 z-50
+        ${isOpen ? "translate-x-0 w-full md:w-[20rem]" : "-translate-x-full w-full md:w-[20rem]"}
+        md:relative md:translate-x-0
       `}
     >
       <div className="flex items-center justify-between mb-6">
         <img src={logo} className="h-12 cursor-pointer" alt="Logo" />
         <button
-          className="md:hidden text-white text-2xl"
+          className="md:hidden text-green-700 text-4xl"
           onClick={onClose}
         >
-          ✕
+          <IoMdCloseCircle />
         </button>
       </div>
 
@@ -38,8 +40,9 @@ const TeacherSideBar = ({ isOpen, onClose }) => {
         <NavLink
           to="/teacher-dashboard"
           end
+          onClick={onClose}
           className={({ isActive }) =>
-            `px-3 py-2 rounded flex gap-2 items-center text-base font-medium transition ${
+            `px-3 py-2 rounded flex gap-2 bg-green-500 items-center text-base font-medium transition ${
               isActive ? "bg-green-600" : "hover:bg-green-500"
             }`
           }
@@ -50,8 +53,9 @@ const TeacherSideBar = ({ isOpen, onClose }) => {
         <NavLink
           to="/teacher-dashboard/gradies"
           end
+          onClick={onClose} 
           className={({ isActive }) =>
-            `px-3 py-2 rounded flex gap-2 items-center text-base font-medium transition ${
+            `px-3 py-2 rounded flex gap-2 bg-green-500 items-center text-base font-medium transition ${
               isActive ? "bg-green-600" : "hover:bg-green-500"
             }`
           }

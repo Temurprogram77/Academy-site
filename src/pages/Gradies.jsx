@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { IoMdCloseCircle } from "react-icons/io";
+import { FaPencilAlt } from "react-icons/fa";
+import { MdDelete } from "react-icons/md";
 
 const TeacherGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -43,13 +45,12 @@ const TeacherGroups = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(
-        `http://167.86.121.42:8080/mark/${selectedMark.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setGroups(groups.filter((g) => g.id !== selectedMark.id));
+      await axios.delete(`http://167.86.121.42:8080/mark/${selectedMark.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const updatedGroups = groups.filter((g) => g.id !== selectedMark.id);
+      setGroups(updatedGroups);
       setShowDeleteModal(false);
     } catch (error) {
       console.error("O‘chirishda xatolik:", error);
@@ -97,7 +98,7 @@ const TeacherGroups = () => {
       });
     }
   };
-
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -105,7 +106,15 @@ const TeacherGroups = () => {
       </div>
     );
   }
-console.log(groups);
+  if (groups.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-[50vh]">
+        <h1 className="text-2xl font-bold text-gray-600">
+          Hozircha baho qo'yganingiz yo‘q!
+        </h1>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-[3rem]">
@@ -122,20 +131,19 @@ console.log(groups);
           </p>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-[1rem]">
+        <div className="grid grid-cols-1 gap-6 mt-[1rem]">
           {groups.map((group) => {
             const { id, studentId, teacherId, ...rest } = group;
 
             return (
               <div
                 key={id}
-                className="bg-green-300 gap-[1rem] text-gray-100 font-semibold text-xl rounded-2xl shadow-lg p-5 hover:shadow-2xl transition duration-300"
+                className="gap-[1rem] flex justify-between items-center text-gray-600 font-semibold text-xl rounded-2xl shadow-lg p-5 hover:shadow-2xl transition duration-300"
               >
-             <p> O'quvchining ismi: {group.studentName}</p>
-              <p>O'qituvchining ismi: {group.teacherName}</p>
-              <p>O'quvchining darajasi: {group.level}</p>
-
-
+                <div>
+                  <p>Ism: {group.studentName.split(" ")[0]}</p>
+                  <p>Baho: {group.score}</p>
+                </div>
                 <div className="flex text-[1rem] gap-3 mt-4">
                   <button
                     onClick={() => {
@@ -147,18 +155,18 @@ console.log(groups);
                       });
                       setShowEditModal(true);
                     }}
-                    className="flex-1 bg-green-500 font-serif text-white py-2 rounded-lg hover:bg-green-600 transition"
+                    className="bg-green-500 w-[60px] h-[40px] flex justify-center items-center font-serif text-white py-2 rounded-lg hover:bg-green-600 transition"
                   >
-                    Tahrirlash
+                    <FaPencilAlt />
                   </button>
                   <button
                     onClick={() => {
                       setSelectedMark(group);
                       setShowDeleteModal(true);
                     }}
-                    className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition"
+                    className="bg-red-500 w-[60px] h-[40px] flex justify-center items-center text-white py-2 rounded-lg hover:bg-red-600 transition"
                   >
-                    O‘chirish
+                    <MdDelete />
                   </button>
                 </div>
               </div>
@@ -167,8 +175,14 @@ console.log(groups);
         </div>
 
         {showDeleteModal && (
-          <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
-            <div className="bg-white rounded-2xl p-10 w-[600px] relative shadow-xl">
+          <div
+            className="fixed inset-0 bg-black/50 flex justify-center items-center z-[100]"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl p-10 w-[600px] relative shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 className="absolute text-3xl top-2 right-2 text-gray-500 hover:text-black"
                 onClick={() => setShowDeleteModal(false)}
@@ -197,8 +211,14 @@ console.log(groups);
         )}
 
         {showEditModal && (
-          <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
-            <div className="bg-white rounded-2xl p-6 w-[400px] relative shadow-xl">
+          <div
+            className="fixed inset-0 bg-black/50 flex justify-center items-center z-[100]"
+            onClick={() => setShowEditModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl p-6 w-[400px] relative shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 className="absolute top-2 text-3xl p-2 right-2 text-gray-500 hover:text-black"
                 onClick={() => setShowEditModal(false)}
@@ -206,7 +226,6 @@ console.log(groups);
                 <IoMdCloseCircle />
               </button>
               <h2 className="text-lg font-bold mb-4">Bahoni tahrirlash</h2>
-
               <div className="space-y-3">
                 <input
                   type="text"
