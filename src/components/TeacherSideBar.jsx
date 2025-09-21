@@ -56,7 +56,7 @@ const TeacherSideBar = ({ isOpen, onClose }) => {
           end
           onClick={onClose} 
           className={({ isActive }) =>
-            `px-3 py-2 rounded flex gap-2 bg-green-500 items-center text-base font-medium transition ${
+            `px-3 py-3 rounded flex gap-2 bg-green-500 items-center text-base font-medium transition ${
               isActive ? "bg-green-600" : "hover:bg-green-500"
             }`
           }
