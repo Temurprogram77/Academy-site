@@ -10,22 +10,30 @@ function User() {
   const [loading, setLoading] = useState(false)
   const [players, setPlayers] = useState([])
   const [leaderboardLoading, setLeaderboardLoading] = useState(true)
+
+  // 🔥 Yangi state
+  const [marks, setMarks] = useState([])
+  console.log(marks);
+  
+  const [marksLoading, setMarksLoading] = useState(true)
+
   const navigate = useNavigate()
 
   useEffect(() => {
     fetchLeaderboard()
+    fetchMyMarks()   // ✅ My Marks ham yuklanadi
   }, [])
 
+  // Reytingni olish
   const fetchLeaderboard = async () => {
     setLeaderboardLoading(true)
     try {
       const token = localStorage.getItem("token")
-  
       if (!token) {
         navigate("/login")
         return
       }
-  
+
       const response = await fetch("http://167.86.121.42:8080/user/leaderboard", {
         method: "GET",
         headers: {
@@ -33,14 +41,10 @@ function User() {
           "Authorization": `Bearer ${token}`,
         },
       })
-  
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`)
-      }
-  
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`)
+
       const result = await response.json()
-      console.log(result, "sfuh")
-  
       if (result.success && result.data) {
         const transformedData = result.data.map((user) => ({
           id: user.studentId,
@@ -56,6 +60,42 @@ function User() {
       setPlayers([])
     } finally {
       setLeaderboardLoading(false)
+    }
+  }
+
+  // ✅ My Marks olish
+  const fetchMyMarks = async () => {
+    setMarksLoading(true)
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        navigate("/login")
+        return
+      }
+
+      const response = await fetch("http://167.86.121.42:8080/mark/myMarks", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`)
+
+      const result = await response.json()
+      console.log("My Marks:", result)
+
+      if (result.success && result.data) {
+        setMarks(result.data)
+      } else {
+        setMarks([])
+      }
+    } catch (error) {
+      console.error("Error fetching marks:", error)
+      setMarks([])
+    } finally {
+      setMarksLoading(false)
     }
   }
   
@@ -212,6 +252,28 @@ function User() {
           <div className="text-center mb-6">
             <h2 className="text-xl font-bold text-green-600">Reyting jadvali</h2>
           </div>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div
+  className={`
+    rounded-2xl p-6 shadow-lg flex flex-col items-center justify-center
+    ${marks.length
+      ? marks[0].level === "YASHIL"
+        ? "bg-green-600 text-white" 
+        : marks[0].level === "QIZIL"
+          ? "bg-red-600 text-white"
+          : marks[0].level === "SARIQ"
+            ? "bg-yellow-500 text-white"
+            : "bg-gray-400 text-white"
+      : "bg-gray-400 text-white"}
+  `}
+>
+  
+</div>
+
+  <div className="bg-green-600 text-white rounded-2xl p-6 shadow-lg flex flex-col items-center justify-center">
+    <span className="text-3xl font-bold">{marks[0].score}</span>
+  </div>
+</div>
 
           {leaderboardLoading ? (
             <div className="flex justify-center items-center py-8">
