@@ -29,9 +29,10 @@ const AdminSidebar = () => {
 
   return (
     <div className="bg-white h-screen w-72 shadow-md">
-      <div className="gap-3 flex flex-col justify-between h-full py-4">
+      <div className="gap-3 flex flex-col justify-between h-full pb-4">
         {/* Logo */}
-        <div className="p-4 border-b-2 border-[#0000001f] w-full flex justify-start">
+        <div className="">
+          <div className="p-4 border-b-2 border-[#0000001f] w-full flex justify-start">
           <Link to="/admin-dashboard">
             <img src={logo} alt="logo" className="w-[180px]" />
           </Link>
@@ -115,6 +116,7 @@ const AdminSidebar = () => {
               Guruhlar
             </div>
           </Link>
+        </div>
         </div>
 
         {/* Pastki menyu */}

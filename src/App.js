@@ -15,12 +15,12 @@ import Students from "./pages/admin/Students";
 import Rooms from "./pages/admin/Rooms";
 import Teams from "./pages/admin/Teams";
 import TeacherGroups from "./pages/TeacherGroups";
-
 import Gradies from "./pages/Gradies";
 import Profile from "./pages/Profile";
 import AdminProfile from "./pages/admin/Profile"; 
-
 import { Toaster } from "sonner";
+import Profile from "./pages/admin/Profile";
+
 
 const App = () => {
   return (

@@ -64,7 +64,7 @@ const AdminTable = () => {
             Parents
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-            Parents Number
+            Level
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
             Teacher
@@ -90,7 +90,7 @@ const AdminTable = () => {
               className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
             >
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">
-                {student.fullName || "No name"}
+                {student.name || "No name"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 {student.phoneNumber || "No phone"}
@@ -99,7 +99,7 @@ const AdminTable = () => {
                 {student.parentName || "Ota/ona"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {student.parentPhone || "Parents Number"}
+                {student.level || "Level"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 {student.teacherName || "Teacher"}
