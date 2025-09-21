@@ -17,11 +17,10 @@ import Teams from "./pages/admin/Teams";
 import TeacherGroups from "./pages/TeacherGroups";
 import Gradies from "./pages/Gradies";
 import Profile from "./pages/Profile";
-import AdminProfile from "./pages/admin/Profile"; 
+import AdminProfile from "./pages/admin/Profile";
 import { Toaster } from "sonner";
 import UserDetail from "./pages/UserDetail";
 import ScoreHistory from "./pages/ScoreHistory";
-
 
 const App = () => {
   return (
@@ -40,9 +39,10 @@ const App = () => {
           <Route path="teachers" element={<Teachers />} />
           <Route path="parents" element={<Parents />} />
           <Route path="students" element={<Students />} />
+          <Route path="/student/:id" element={<StudentPage />} />
           <Route path="rooms" element={<Rooms />} />
           <Route path="teams" element={<Teams />} />
-          <Route path="profile" element={<AdminProfile />} /> 
+          <Route path="profile" element={<AdminProfile />} />
         </Route>
 
         <Route path="/teacher-dashboard" element={<TeacherPanel />}>

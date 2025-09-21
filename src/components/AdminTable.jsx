@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const AdminTable = () => {
   const [students, setStudents] = useState([]);
   const [groups, setGroups] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const navigate = useNavigate();
 
-  const token = localStorage.getItem("token"); // 🔑 login vaqtida saqlangan token
+  const token = localStorage.getItem("token");
 
-  // axios instance
   const api = axios.create({
     baseURL: "http://167.86.121.42:8080",
     headers: {
-      Authorization: `Bearer ${token}`, // token headerga
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -24,30 +26,35 @@ const AdminTable = () => {
 
     // Students
     api
-      .get("/user/topStudents")
+      .get("/user/search?role=STUDENT&page=0&size=10")
       .then((res) => {
-        console.log("Students data:", res.data);
-        setStudents(res.data.data || []); // ✅ faqat massivni olamiz
+        const arr = res?.data?.data?.body ?? [];
+        console.log("Students array:", arr);
+        setStudents(arr);
       })
       .catch((err) => console.error("Students error:", err));
 
     // Groups
     api
       .get("/group")
-      .then((res) => {
-        console.log("Groups data:", res.data);
-        setGroups(res.data.data || []);
-      })
+      .then((res) => setGroups(res.data.data || []))
       .catch((err) => console.error("Groups error:", err));
 
     // Rooms
     api
       .get("/room")
-      .then((res) => {
-        console.log("Rooms data:", res.data);
-        setRooms(res.data.data || []);
-      })
+      .then((res) => setRooms(res.data.data || []))
       .catch((err) => console.error("Rooms error:", err));
+
+    // Teachers
+    api
+      .get("/user/search?role=TEACHER&page=0&size=10")
+      .then((res) => {
+        const arr = res?.data?.data?.body ?? [];
+        console.log("Teachers array:", arr);
+        setTeachers(arr);
+      })
+      .catch((err) => console.error("Teachers error:", err));
   }, [token]);
 
   return (
@@ -89,33 +96,53 @@ const AdminTable = () => {
               key={student.id || idx}
               className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
             >
+              {/* O'quvchi */}
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">
-                {student.name || "No name"}
+                {student.fullName || student.name || "No name"}
               </td>
+
+              {/* Telefon */}
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {student.phoneNumber || "No phone"}
+                {student.phone || student.phoneNumber || "No phone"}
               </td>
+
+              {/* Parents */}
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 {student.parentName || "Ota/ona"}
               </td>
+
+              {/* Level */}
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 {student.level || "Level"}
               </td>
+
+              {/* Teacher */}
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {student.teacherName || "Teacher"}
+                {teachers[idx]?.fullName || "Noma'lum"}
               </td>
+
+              {/* Role */}
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {student.role || "Student"}
+                {student.role || "STUDENT"}
               </td>
+
+              {/* Guruh */}
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {groups[idx]?.name || "Guruh"}
+                {student.groupName || groups[idx]?.name || "Guruh"}
               </td>
+
+              {/* Xona */}
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {rooms[idx]?.name || "Xona"}
+                {rooms[idx]?.name || "Nomalum"}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <button className="text-indigo-500 hover:text-indigo-700 font-medium">
-                  Edit
+
+              {/* Edit tugmasi */}
+              <td className="px-6 py-4">
+                <button
+                  className="text-indigo-500 hover:text-indigo-700 font-medium"
+                  onClick={() => navigate(`/student/${student.id}`)}
+                >
+                  Ko'proq
                 </button>
               </td>
             </tr>
