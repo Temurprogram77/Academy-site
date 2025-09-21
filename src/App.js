@@ -16,6 +16,7 @@ import Rooms from "./pages/admin/Rooms";
 import Teams from "./pages/admin/Teams";
 import TeacherGroups from "./pages/TeacherGroups";
 import Gradies from "./pages/Gradies";
+import Profile from "./pages/Profile";
 
 const App = () => {
   return (
@@ -40,6 +41,7 @@ const App = () => {
          <Route path="/teacher-dashboard" element={<TeacherPanel />}>
           <Route index element={<TeacherGroups />} /> 
           <Route path="grade/:groupId" element={<GradePage />} />
+          <Route path="profile" element={<Profile/>} />
           <Route path="gradies" element={<Gradies />} />
         </Route>
 

@@ -14,9 +14,9 @@ const TeacherGroups = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [formData, setFormData] = useState({
-    homeworkScore: 0,
-    activityScore: 0,
-    attendanceScore: 0,
+    homeworkScore: "",
+    activityScore: "",
+    attendanceScore: "",
   });
   const navigate = useNavigate();
 
@@ -24,23 +24,43 @@ const TeacherGroups = () => {
 
   useEffect(() => {
     if (!token) {
-      navigate("/login");
+      navigate("/login", { replace: true });
       return;
     }
 
-    axios
-      .get("http://167.86.121.42:8080/mark/myMarks", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
+    const fetchMarks = async () => {
+      try {
+        const res = await axios.get("http://167.86.121.42:8080/mark/myMarks", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         const body = res.data.data || [];
-        setGroups(body);
         if (body.length > 0) setName(body[0].teacherName);
-      })
-      .catch((err) => {
-        setError(`Xato: ${err.response?.status} ${"So‘rov bajarilmadi"}`);
-      })
-      .finally(() => setLoading(false));
+
+        const detailedMarks = await Promise.all(
+          body.map((g) =>
+            axios
+              .get(`http://167.86.121.42:8080/mark/${g.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              .then((r) => r.data.data)
+              .catch(() => null)
+          )
+        );
+
+        setGroups(detailedMarks.filter((m) => m !== null));
+      } catch (err) {
+        setError(
+          `Xato: ${err.response?.status || ""} ${
+            err.message || "So‘rov bajarilmadi"
+          }`
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMarks();
   }, [navigate, token]);
 
   const handleDelete = async () => {
@@ -49,8 +69,7 @@ const TeacherGroups = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const updatedGroups = groups.filter((g) => g.id !== selectedMark.id);
-      setGroups(updatedGroups);
+      setGroups(groups.filter((g) => g.id !== selectedMark.id));
       setShowDeleteModal(false);
     } catch (error) {
       console.error("O‘chirishda xatolik:", error);
@@ -72,18 +91,17 @@ const TeacherGroups = () => {
         }
       );
 
-      setGroups(
-        groups.map((g) =>
-          g.id === selectedMark.id
-            ? {
-                ...g,
-                homeworkScore: Number(formData.homeworkScore),
-                activityScore: Number(formData.activityScore),
-                attendanceScore: Number(formData.attendanceScore),
-              }
-            : g
-        )
+      const updated = await axios.get(
+        `http://167.86.121.42:8080/mark/${selectedMark.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
+
+      setGroups(
+        groups.map((g) => (g.id === selectedMark.id ? updated.data.data : g))
+      );
+
       setShowEditModal(false);
     } catch (error) {
       console.error("Tahrirlashda xatolik:", error);
@@ -94,11 +112,24 @@ const TeacherGroups = () => {
     if (value === "" || (/^\d{1,2}$/.test(value) && Number(value) <= 10)) {
       setFormData({
         ...formData,
-        [field]: value === "" ? "" : Number(value),
+        [field]: value,
       });
     }
   };
-  
+
+  const getLevelColor = (level) => {
+    switch (level) {
+      case "YASHIL":
+        return "text-green-600 font-bold";
+      case "SARIQ":
+        return "text-yellow-500 font-bold";
+      case "QIZIL":
+        return "text-red-600 font-bold";
+      default:
+        return "text-gray-500";
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -110,7 +141,7 @@ const TeacherGroups = () => {
     return (
       <div className="flex justify-center items-center h-[50vh]">
         <h1 className="text-2xl font-bold text-gray-600">
-          Hozircha baho qo'yganingiz yo‘q!
+          Hozircha baho qo‘yganingiz yo‘q!
         </h1>
       </div>
     );
@@ -118,7 +149,7 @@ const TeacherGroups = () => {
 
   return (
     <div className="mt-[3rem]">
-      <div className=" max-w-[1300px] mx-auto px-4">
+      <div className="max-w-[1300px] mx-auto px-4">
         <h1 className="text-4xl font-bold text-green-400 text-center">
           Salom, {name}
         </h1>
@@ -132,46 +163,67 @@ const TeacherGroups = () => {
         )}
 
         <div className="grid grid-cols-1 gap-6 mt-[1rem]">
-          {groups.map((group) => {
-            const { id, studentId, teacherId, ...rest } = group;
-
-            return (
-              <div
-                key={id}
-                className="gap-[1rem] flex justify-between items-center text-gray-600 font-semibold text-xl rounded-2xl shadow-lg p-5 hover:shadow-2xl transition duration-300"
-              >
-                <div>
-                  <p>Ism: {group.studentName.split(" ")[0]}</p>
-                  <p>Baho: {group.score}</p>
-                </div>
-                <div className="flex text-[1rem] gap-3 mt-4">
-                  <button
-                    onClick={() => {
-                      setSelectedMark(group);
+          {groups.map((group) => (
+            <div
+              key={group.id}
+              className="gap-[1rem] flex flex-col md:flex-row md:justify-between md:items-center text-gray-600 font-semibold text-xl rounded-2xl shadow-lg p-5 hover:shadow-2xl transition duration-300"
+            >
+              <div>
+                <p>Ism: {group.studentName}</p>
+                <p>Umumiy baho: {group.totalScore}</p>
+                <p>
+                  Daraja:{" "}
+                  <span className={getLevelColor(group.level)}>
+                    {group.level}
+                  </span>
+                </p>
+                <p>
+                  Sana:{" "}
+                  {group.date
+                    ? new Date(group.date).toLocaleDateString("uz-UZ")
+                    : "Noma’lum"}
+                </p>
+              </div>
+              <div className="flex gap-3 mt-4 md:mt-0">
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await axios.get(
+                        `http://167.86.121.42:8080/mark/${group.id}`,
+                        {
+                          headers: { Authorization: `Bearer ${token}` },
+                        }
+                      );
+                      setSelectedMark(res.data.data);
                       setFormData({
-                        homeworkScore: group.homeworkScore || 0,
-                        activityScore: group.activityScore || 0,
-                        attendanceScore: group.attendanceScore || 0,
+                        homeworkScore:
+                          res.data.data.homeworkScore?.toString() || "",
+                        activityScore:
+                          res.data.data.activityScore?.toString() || "",
+                        attendanceScore:
+                          res.data.data.attendanceScore?.toString() || "",
                       });
                       setShowEditModal(true);
-                    }}
-                    className="bg-green-500 w-[60px] h-[40px] flex justify-center items-center font-serif text-white py-2 rounded-lg hover:bg-green-600 transition"
-                  >
-                    <FaPencilAlt />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedMark(group);
-                      setShowDeleteModal(true);
-                    }}
-                    className="bg-red-500 w-[60px] h-[40px] flex justify-center items-center text-white py-2 rounded-lg hover:bg-red-600 transition"
-                  >
-                    <MdDelete />
-                  </button>
-                </div>
+                    } catch (err) {
+                      console.error("Markni olishda xatolik:", err);
+                    }
+                  }}
+                  className="bg-gradient-to-r from-green-400 to-green-600 w-[60px] h-[40px] flex justify-center items-center text-white rounded-lg hover:opacity-90 transition"
+                >
+                  <FaPencilAlt />
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedMark(group);
+                    setShowDeleteModal(true);
+                  }}
+                  className="bg-gradient-to-r from-red-400 to-red-600 w-[60px] h-[40px] flex justify-center items-center text-white rounded-lg hover:opacity-90 transition"
+                >
+                  <MdDelete />
+                </button>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
 
         {showDeleteModal && (
@@ -201,7 +253,7 @@ const TeacherGroups = () => {
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg hover:opacity-90"
                 >
                   Ha
                 </button>
@@ -228,7 +280,9 @@ const TeacherGroups = () => {
               <h2 className="text-lg font-bold mb-4">Bahoni tahrirlash</h2>
               <div className="space-y-3">
                 <input
-                  type="text"
+                  type="number"
+                  min="0"
+                  max="10"
                   placeholder="Homework Score"
                   value={formData.homeworkScore}
                   onChange={(e) =>
@@ -237,7 +291,9 @@ const TeacherGroups = () => {
                   className="w-full border rounded-lg px-3 py-2"
                 />
                 <input
-                  type="text"
+                  type="number"
+                  min="0"
+                  max="10"
                   placeholder="Activity Score"
                   value={formData.activityScore}
                   onChange={(e) =>
@@ -246,7 +302,9 @@ const TeacherGroups = () => {
                   className="w-full border rounded-lg px-3 py-2"
                 />
                 <input
-                  type="text"
+                  type="number"
+                  min="0"
+                  max="10"
                   placeholder="Attendance Score"
                   value={formData.attendanceScore}
                   onChange={(e) =>
@@ -265,7 +323,7 @@ const TeacherGroups = () => {
                 </button>
                 <button
                   onClick={handleEdit}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-500"
+                  className="px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg hover:opacity-90"
                 >
                   Saqlash
                 </button>

@@ -5,6 +5,7 @@ import { FaHouse } from "react-icons/fa6";
 import { MdGrade } from "react-icons/md";
 import { GiExitDoor } from "react-icons/gi";
 import { IoMdCloseCircle } from "react-icons/io";
+import { IoPersonCircleOutline } from "react-icons/io5";
 
 const TeacherSideBar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -61,6 +62,18 @@ const TeacherSideBar = ({ isOpen, onClose }) => {
           }
         >
           <MdGrade /> Baholar
+        </NavLink>
+        <NavLink
+          to="/teacher-dashboard/profile"
+          end
+          onClick={onClose} 
+          className={({ isActive }) =>
+            `px-3 py-2 rounded flex gap-2 bg-green-500 items-center text-base font-medium transition ${
+              isActive ? "bg-green-600" : "hover:bg-green-500"
+            }`
+          }
+        >
+          <IoPersonCircleOutline /> Profile
         </NavLink>
       </nav>
 
