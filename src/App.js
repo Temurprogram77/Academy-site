@@ -15,23 +15,20 @@ import Students from "./pages/admin/Students";
 import Rooms from "./pages/admin/Rooms";
 import Teams from "./pages/admin/Teams";
 import TeacherGroups from "./pages/TeacherGroups";
-import Gradies from "./pages/Gradies";
-import Profile from "./pages/Profile";
-import { Toaster } from "sonner";
 
 import Gradies from "./pages/Gradies";
 import Profile from "./pages/Profile";
-import Profile from "./pages/admin/Profile";
+import AdminProfile from "./pages/admin/Profile"; 
+
+import { Toaster } from "sonner";
 
 const App = () => {
   return (
     <Router>
-    <Toaster position="bottom-right" richColors reverseOrder={false} />
+      <Toaster position="bottom-right" richColors reverseOrder={false} />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/user-dashboard" element={<User />} />
-        <Route path="/admin-dashboard" element={<AdminPanel />} />
 
         <Route path="/user-dashboard" element={<User />} />
 
@@ -42,13 +39,13 @@ const App = () => {
           <Route path="students" element={<Students />} />
           <Route path="rooms" element={<Rooms />} />
           <Route path="teams" element={<Teams />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="profile" element={<AdminProfile />} /> 
         </Route>
 
-         <Route path="/teacher-dashboard" element={<TeacherPanel />}>
-          <Route index element={<TeacherGroups />} /> 
+        <Route path="/teacher-dashboard" element={<TeacherPanel />}>
+          <Route index element={<TeacherGroups />} />
           <Route path="grade/:groupId" element={<GradePage />} />
-          <Route path="profile" element={<Profile/>} />
+          <Route path="profile" element={<Profile />} />
           <Route path="gradies" element={<Gradies />} />
         </Route>
 
