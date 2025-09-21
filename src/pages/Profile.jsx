@@ -3,12 +3,19 @@ import axios from "axios";
 import { IoMdCloseCircle } from "react-icons/io";
 import { toast } from "sonner";
 
+const defaultImage =
+  "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg";
+
 const TeacherProfile = () => {
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState({
+    fullName: "",
+    phone: "",
+    imageUrl: defaultImage,
+  });
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
-    imageUrl: "",
+    imageUrl: defaultImage,
   });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -23,15 +30,19 @@ const TeacherProfile = () => {
         const res = await axios.get("http://167.86.121.42:8080/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setProfile(res.data.data);
+        setProfile({
+          fullName: res.data.data.fullName || "",
+          phone: res.data.data.phone || "",
+          imageUrl: res.data.data.imageUrl || defaultImage,
+        });
         setFormData({
-          fullName: res.data.data.fullName,
-          phone: res.data.data.phone,
-          imageUrl: res.data.data.imageUrl,
+          fullName: res.data.data.fullName || "",
+          phone: res.data.data.phone || "",
+          imageUrl: res.data.data.imageUrl || defaultImage,
         });
       } catch (err) {
-        console.error("Profilni olishda xatolik:", err);
-        toast.error("Profilni yuklashda xatolik ❌");
+        console.error(err);
+        toast.error("Profilni yuklashda xatolik ");
       } finally {
         setLoading(false);
       }
@@ -40,22 +51,25 @@ const TeacherProfile = () => {
   }, [token]);
 
   const handleSave = async () => {
+    const updatedData = {
+      fullName: formData.fullName.trim() || profile.fullName,
+      phone: formData.phone.trim() || profile.phone,
+      imageUrl: formData.imageUrl.trim() || profile.imageUrl,
+    };
+
     try {
       await axios.put(
         "http://167.86.121.42:8080/user",
-        {
-          fullName: formData.fullName,
-          phone: formData.phone,
-          imageUrl: formData.imageUrl,
-        },
+        updatedData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setProfile(formData);
+      setProfile(updatedData);
+      setFormData(updatedData);
       setEditing(false);
       toast.success("Profil muvaffaqiyatli tahrirlandi!");
     } catch (err) {
-      console.error("Profilni yangilashda xatolik:", err);
-      toast.error("Profilni yangilashda xatolik ❌");
+      console.error(err);
+      toast.error("Profilni yangilashda xatolik");
     }
   };
 
@@ -67,22 +81,14 @@ const TeacherProfile = () => {
     );
   }
 
-  if (!profile) {
-    return <p className="text-center text-red-500">Profil topilmadi!</p>;
-  }
-
   return (
     <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-lg rounded-2xl">
       <h1 className="text-3xl font-bold text-center text-green-500 mb-6">
         Mening Profilim
       </h1>
-
       <div className="flex flex-col items-center">
         <img
-          src={
-            profile.imageUrl ||
-            "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg"
-          }
+          src={profile.imageUrl}
           alt="profile"
           className="w-32 h-32 rounded-full object-cover border-4 border-green-300"
         />
