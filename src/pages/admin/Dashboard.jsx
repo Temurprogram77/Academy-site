@@ -78,6 +78,7 @@ const Dashboard = () => {
       </div>
       <div className="overflow-x-auto">
 <<<<<<< HEAD
+<<<<<<< HEAD
       <AdminTable/>
 =======
       <table className="min-w-full divide-y divide-[#fff] my-10">
@@ -163,6 +164,9 @@ const Dashboard = () => {
         </tbody>
       </table>
 >>>>>>> efb848cd (added)
+=======
+      <AdminTable/>
+>>>>>>> 6f81063c (added)
     </div>
     </div>
   );

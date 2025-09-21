@@ -15,6 +15,11 @@ import Students from "./pages/admin/Students";
 import Rooms from "./pages/admin/Rooms";
 import Teams from "./pages/admin/Teams";
 import TeacherGroups from "./pages/TeacherGroups";
+<<<<<<< HEAD
+=======
+import Gradies from "./pages/Gradies";
+import Profile from "./pages/Profile";
+>>>>>>> 6f81063c (added)
 import Profile from "./pages/admin/Profile";
 
 const App = () => {
