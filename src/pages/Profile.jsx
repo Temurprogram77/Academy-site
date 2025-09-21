@@ -11,12 +11,12 @@ const TeacherProfile = () => {
   });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState("");
 
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    setRole(localStorage.getItem("role"))
+    setRole(localStorage.getItem("role"));
     const fetchProfile = async () => {
       try {
         const res = await axios.get("http://167.86.121.42:8080/user", {
@@ -75,24 +75,30 @@ const TeacherProfile = () => {
 
       <div className="flex flex-col items-center">
         <img
-          src={profile.imageUrl || "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg"}
+          src={
+            profile.imageUrl ||
+            "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg"
+          }
           alt="profile"
           className="w-32 h-32 rounded-full object-cover border-4 border-green-300"
         />
         {!editing ? (
-          <div className="mt-6 text-lg text-gray-700 space-y-2">
-            <p>
-              <strong>Ism:</strong> {profile.fullName}
-            </p>
-            <p>
-              <strong>Telefon:</strong> {profile.phone}
-            </p>
-            <p>
-              <strong>Rol:</strong> {role}
-            </p>
+          <div className="mt-6 text-lg text-gray-700 space-y-2 w-full">
+            <div className="flex justify-between border-b pb-1">
+              <strong>Ism:</strong>
+              <span>{profile.fullName}</span>
+            </div>
+            <div className="flex justify-between border-b pb-1">
+              <strong>Telefon:</strong>
+              <span>{profile.phone}</span>
+            </div>
+            <div className="flex justify-between border-b pb-1">
+              <strong>Rol:</strong>
+              <span>{profile.role}</span>
+            </div>
             <button
               onClick={() => setEditing(true)}
-              className="mt-4 px-6 py-2 rounded-lg text-white bg-gradient-to-r from-green-400 to-green-600 hover:opacity-90 transition"
+              className="mt-4 px-6 py-2 rounded-lg text-white bg-gradient-to-r from-green-400 to-green-600 hover:opacity-90 transition w-full"
             >
               Tahrirlash
             </button>
