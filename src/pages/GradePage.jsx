@@ -34,7 +34,7 @@ const GradePage = () => {
           attendanceScore: "",
         }))
       );
-      toast.success("O‘quvchilar ro‘yxati yuklandi ✅");
+      toast.success("O‘quvchilar ro‘yxati yuklandi");
     } catch (err) {
       setError(`Xato: ${err.response?.status || ""} So‘rov bajarilmadi`);
       toast.error("O‘quvchilarni yuklashda xatolik ❌");
@@ -75,11 +75,11 @@ const GradePage = () => {
       );
       await fetchStudents();
       toast.success(
-        `${student.name || student.studentName} uchun baho qo‘yildi! 🎉`
+        `${student.name || student.studentName} uchun baho qo‘yildi!`
       );
     } catch (err) {
       setError(`Xato: ${err.response?.status || ""} So‘rov bajarilmadi`);
-      toast.error("Baho qo‘yishda muammo yuz berdi ❌");
+      toast.error("Baho qo‘yishda muammo yuz berdi");
     } finally {
       setPosting((prev) => ({ ...prev, [studentId]: false }));
     }
