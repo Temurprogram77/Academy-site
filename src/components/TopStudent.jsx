@@ -26,7 +26,11 @@ const TopStudent = () => {
       .get("/user/topStudentsForTeacher")
       .then((res) => {
         if (res?.data?.success) {
-          setStudents(res.data.data || []);
+          // score bo‘yicha kamayish tartibida sort qilish va eng yaxshi 5 tasini olish
+          const sorted = (res.data.data || [])
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5);
+          setStudents(sorted);
         }
       })
       .catch((err) => console.error("Top students error:", err));
@@ -56,64 +60,65 @@ const TopStudent = () => {
   };
 
   return (
-    <div className="overflow-x-auto my-10">
-      <h1 className="text-2xl text-center font-bold text-green-600 mb-6">
-        🏆 Eng yaxshi 5 ta o‘quvchi
+    <div className="my-10">
+      <h1 className="text-xl sm:text-2xl text-center font-bold text-green-600 mb-6">
+        Eng yaxshi 5 ta o‘quvchi
       </h1>
-      <table className="min-w-full divide-y divide-gray-200 border rounded-lg shadow">
-        <thead className="bg-gray-100 text-black">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs uppercase">#</th>
-            <th className="px-6 py-3 text-left text-xs uppercase">Ism</th>
-            <th className="px-6 py-3 text-left text-xs uppercase">Telefon</th>
-            <th className="px-6 py-3 text-left text-xs uppercase">Ota/ona</th>
-            <th className="px-6 py-3 text-left text-xs uppercase">Level</th>
-            <th className="px-6 py-3 text-left text-xs uppercase">Score</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {students.length > 0 ? (
-            students.map((student, idx) => (
-              <tr
-                key={student.id || idx}
-                className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
-              >
-                <td className="px-6 py-4 text-sm font-bold text-gray-700">
-                  {idx + 1}
-                </td>
-                <td className="px-6 py-4 text-sm font-semibold text-black">
-                  {student.name || "No name"}
-                </td>
-                <td className="px-6 py-4 text-sm">
-                  {formatPhoneNumber(student.phoneNumber)}
-                </td>
-                <td className="px-6 py-4 text-sm">
-                  {student.parentName || "Ota/ona"}
-                </td>
-                <td
-                  className={`px-6 py-2 rounded text-sm font-semibold text-center ${getLevelColor(
-                    student.level
-                  )}`}
+
+      <div className="overflow-x-auto shadow rounded-lg">
+        <table className="w-full text-sm sm:text-base border-collapse">
+          <thead className="bg-gray-100 text-black">
+            <tr>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">#</th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Ism</th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Telefon</th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Ota/ona</th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Level</th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Score</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {students.length > 0 ? (
+              students.map((student, idx) => (
+                <tr
+                  key={student.id || idx}
+                  className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
                 >
-                  {student.level || "Level"}
-                </td>
-                <td className="px-6 py-4 text-sm font-bold text-green-600">
-                  {student.score ?? 0}
+                  <td className="px-3 sm:px-6 py-4 font-bold">{idx + 1}</td>
+                  <td className="px-3 sm:px-6 py-4 font-semibold">
+                    {student.name || "No name"}
+                  </td>
+                  <td className="px-3 sm:px-6 py-4">
+                    {formatPhoneNumber(student.phoneNumber)}
+                  </td>
+                  <td className="px-3 sm:px-6 py-4">
+                    {student.parentName || "Ota/ona"}
+                  </td>
+                  <td
+                    className={`px-3 sm:px-6 py-2 rounded text-center font-semibold ${getLevelColor(
+                      student.level
+                    )}`}
+                  >
+                    {student.level || "Level"}
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 font-bold text-green-600">
+                    {student.score ?? 0}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="6"
+                  className="text-center px-3 sm:px-6 py-4 text-gray-500"
+                >
+                  Kechirasiz, top studentlar yuklanmadi!
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td
-                colSpan="6"
-                className="text-center px-6 py-4 text-sm text-gray-500"
-              >
-                Kechirasiz, top studentlar yuklanmadi!
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
