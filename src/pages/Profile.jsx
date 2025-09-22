@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { IoMdCloseCircle } from "react-icons/io";
 import { toast } from "sonner";
 import { Pen } from "lucide-react";
@@ -8,15 +8,18 @@ import api from "../api/axios";
 const defaultImage =
   "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg";
 
+// Profilni olish
 const fetchProfile = async () => {
   const { data } = await api.get("/user");
   return data.data;
 };
 
+// Profilni yangilash
 const updateProfile = async (updatedData) => {
   await api.put("/user", updatedData);
 };
 
+// Fayl yuklash
 const uploadFile = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -33,9 +36,11 @@ const TeacherProfile = () => {
     phone: "",
     imageUrl: defaultImage,
   });
+
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
+  // Profilni olish (cache bilan)
   const {
     data: profile,
     isLoading,
@@ -43,15 +48,22 @@ const TeacherProfile = () => {
   } = useQuery({
     queryKey: ["profile"],
     queryFn: fetchProfile,
-    onSuccess: (data) => {
-      setFormData({
-        fullName: data.fullName || "",
-        phone: data.phone || "",
-        imageUrl: data.imageUrl || defaultImage,
-      });
-    },
+    staleTime: 5 * 60 * 1000, // 5 minut cache
+    cacheTime: 10 * 60 * 1000, // 10 minutgacha saqlanadi
   });
 
+  // Agar profil o‘zgarsa, formData ni yangilash
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullName: profile.fullName || "",
+        phone: profile.phone || "",
+        imageUrl: profile.imageUrl || defaultImage,
+      });
+    }
+  }, [profile]);
+
+  // Update mutation
   const mutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: () => {
@@ -64,6 +76,8 @@ const TeacherProfile = () => {
       toast.error("Profilni yangilashda xatolik");
     },
   });
+
+  // Fayl yuklash
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -76,6 +90,7 @@ const TeacherProfile = () => {
     }
   };
 
+  // Saqlash
   const handleSave = () => {
     const updatedData = {
       fullName: formData.fullName.trim() || profile.fullName,
@@ -85,6 +100,7 @@ const TeacherProfile = () => {
     mutation.mutate(updatedData);
   };
 
+  // Loading
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[50vh]">
@@ -93,6 +109,7 @@ const TeacherProfile = () => {
     );
   }
 
+  // Error
   if (isError) {
     return (
       <div className="flex justify-center items-center h-[50vh]">

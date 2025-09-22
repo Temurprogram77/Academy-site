@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -11,8 +12,8 @@ const fetchTopStudents = async (token) => {
   );
   if (data?.success) {
     return (data.data || [])
-      .sort((a, b) => b.score - a.score) // kamayish tartibida
-      .slice(0, 5); // eng yaxshi 5 ta
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
   }
   return [];
 };
@@ -21,9 +22,11 @@ const TopStudent = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  if (!token) {
-    navigate("/login");
-  }
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token, navigate]);
 
   const {
     data: students = [],
@@ -33,8 +36,9 @@ const TopStudent = () => {
   } = useQuery({
     queryKey: ["top-students"],
     queryFn: () => fetchTopStudents(token),
+    enabled: !!token,
     retry: false,
-    staleTime: 1000 * 60 * 5, // 5 daqiqa cache
+    staleTime: 1000 * 60 * 5,
     onError: (err) => {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
