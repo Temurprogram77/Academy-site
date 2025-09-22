@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import AdminTable from "../../components/AdminTable"
+import AdminTable from "../../components/AdminTable";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [data, setData] = useState(null); // APIdan keladigan ma'lumot
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,7 +29,7 @@ const Dashboard = () => {
         }
       } catch (err) {
         console.error(err);
-        setError("Server bilan ulanishda xatolik.");
+        setError("Kechirasiz hozirda server bilan xatolik.");
       } finally {
         setLoading(false);
       }
@@ -55,30 +57,45 @@ const Dashboard = () => {
   return (
     <div className="p-6">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        <div className="p-4 box bg-white rounded shadow cursor-pointer">
+        <div
+          className="p-4 box bg-white rounded shadow cursor-pointer"
+          onClick={() => navigate("/admin-dashboard/rooms")}
+        >
           <p className="text-gray-500">Xonalar</p>
           <p className="text-3xl font-semibold">{data.roomCount}</p>
         </div>
-        <div className="p-4  bg-white rounded shadow cursor-pointer">
+        <div
+          className="p-4 bg-white rounded shadow cursor-pointer"
+          onClick={() => navigate("/admin-dashboard/teams")}
+        >
           <p className="text-gray-500">Guruhlar</p>
           <p className="text-3xl font-semibold">{data.groupCount}</p>
         </div>
-        <div className="p-4  bg-white rounded shadow cursor-pointer">
+        <div
+          className="p-4 bg-white rounded shadow cursor-pointer"
+          onClick={() => navigate("/admin-dashboard/students")}
+        >
           <p className="text-gray-500">O‘quvchilar</p>
           <p className="text-3xl font-semibold">{data.studentCount}</p>
         </div>
-        <div className="p-4  bg-white rounded shadow cursor-pointer">
+        <div
+          className="p-4 bg-white rounded shadow cursor-pointer"
+          onClick={() => navigate("/admin-dashboard/teachers")}
+        >
           <p className="text-gray-500">O‘qituvchilar</p>
           <p className="text-3xl font-semibold">{data.teacherCount}</p>
         </div>
-        <div className="p-4  bg-white rounded shadow cursor-pointer">
+        <div
+          className="p-4 bg-white rounded shadow cursor-pointer"
+          onClick={() => navigate("/admin-dashboard/parents")}
+        >
           <p className="text-gray-500">Ota-onalar</p>
           <p className="text-3xl font-semibold">{data.parentCount}</p>
         </div>
       </div>
       <div className="overflow-x-auto">
-      <AdminTable/>
-    </div>
+        <AdminTable />
+      </div>
     </div>
   );
 };

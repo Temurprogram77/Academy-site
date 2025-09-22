@@ -23,7 +23,6 @@ const LoginPage = () => {
 
   const navigate = useNavigate();
 
-  // ✅ Agar token va role bo‘lsa, to‘g‘ri panelga yuboramiz
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
@@ -31,7 +30,7 @@ const LoginPage = () => {
     if (token && role) {
       if (role === "ADMIN") navigate("/admin-dashboard");
       else if (role === "TEACHER") navigate("/teacher-dashboard");
-      else if (role === "USER") navigate("/user-dashboard");
+      else if (role === "STUDENT") navigate("/user-dashboard");
       else if (role === "PARENT") navigate("/user-dashboard");
     } else {
       setLoading(false); // login sahifasi ko‘rinsin
@@ -63,7 +62,7 @@ const LoginPage = () => {
 
         if (role === "ADMIN") navigate("/admin-dashboard");
         else if (role === "TEACHER") navigate("/teacher-dashboard");
-        else if (role === "USER") navigate("/user-dashboard");
+        else if (role === "STUDENT") navigate("/user-dashboard");
         else if (role === "PARENT") navigate("/user-dashboard");
         else setErrorMessage("⚠️ Noma'lum rol qaytdi.");
       } else {
@@ -85,21 +84,24 @@ const LoginPage = () => {
 
   return (
     <div className="bg-[#F3F4F6] min-h-screen flex items-center w-full">
-      <div className="bg-[#fff] min-h-screen mx-auto lg:px-32 px-0 py-10 rounded-xl flex items-center justify-center">
-        <div className="relative md:py-4 py-0 flex md:flex-row items-center justify-between gap-10 w-full">
+      <div className="bg-[#fff] lg:w-auto w-full min-h-screen mx-auto lg:px-32 px-0 py-10 rounded-xl flex items-center justify-center">
+        <div className="relative md:py-4 py-0 flex md:flex-row items-center justify-between gap-10">
           {/* Animation */}
-          <div className="md:block hidden">
+          <div className="hidden lg:flex justify-center items-center">
             <Player
               autoplay
               loop
               src={Animated}
-              style={{ height: "550px", width: "550px" }}
+              style={{
+                width: window.innerWidth >= 1280 ? "550px" : "400px", // xl: 1280px dan katta
+                height: window.innerWidth >= 1280 ? "550px" : "400px",
+              }}
             />
           </div>
 
-          <div className="border-l-2 justify-center 2xl:w-[800px] h-[450px]">
+          <div className="lg:border-l-2 justify-center 2xl:w-[800px] h-[450px]">
             <div className="w-full p-1 rounded-xl h-full">
-              <div className="bg-white rounded-xl p-10 w-full h-full flex flex-col justify-center">
+              <div className="bg-white rounded-xl lg:p-10 p-5 w-full h-full flex flex-col justify-center">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -110,7 +112,7 @@ const LoginPage = () => {
                     <img
                       src={logo}
                       alt="Logo"
-                      className="w-[500px] md:h-[160px]"
+                      className="w-[500px]"
                     />
                   </div>
                   <h2 className="text-3xl font-semibold text-center my-4">
