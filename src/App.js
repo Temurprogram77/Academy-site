@@ -21,6 +21,7 @@ import AdminProfile from "./pages/admin/Profile";
 import { Toaster } from "sonner";
 import UserDetail from "./pages/UserDetail";
 import ScoreHistory from "./pages/ScoreHistory";
+import Groups from "./pages/Groups";
 
 
 const App = () => {
@@ -50,6 +51,7 @@ const App = () => {
           <Route path="grade/:groupId" element={<GradePage />} />
           <Route path="profile" element={<Profile />} />
           <Route path="gradies" element={<Gradies />} />
+          <Route path="groups" element={<Groups />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

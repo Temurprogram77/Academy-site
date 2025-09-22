@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import dataImages from "../assets/images";
 import { FaHouse } from "react-icons/fa6";
-import { MdGrade } from "react-icons/md";
+import { MdGrade, MdGroups } from "react-icons/md";
 import { GiExitDoor } from "react-icons/gi";
 import { IoMdCloseCircle } from "react-icons/io";
 import { IoPersonCircleOutline } from "react-icons/io5";
@@ -50,7 +50,18 @@ const TeacherSideBar = ({ isOpen, onClose }) => {
         >
           <FaHouse /> Dashboard
         </NavLink>
-
+        <NavLink
+          to="/teacher-dashboard/groups"
+          end
+          onClick={onClose}
+          className={({ isActive }) =>
+            `px-3 py-3 rounded flex gap-2 bg-green-500 items-center text-base font-medium transition ${
+              isActive ? "bg-green-600" : "hover:bg-green-500"
+            }`
+          }
+        >
+          <MdGroups /> Guruhlar
+        </NavLink>
         <NavLink
           to="/teacher-dashboard/gradies"
           end
