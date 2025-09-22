@@ -30,47 +30,55 @@ import AddStudent from "./pages/admin/addStudent";
 import AddRoom from "./pages/admin/AddRoom";
 import AddTeam from "./pages/admin/addTeam";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+const queryClient = new QueryClient();
+
 const App = () => {
   return (
-    <Router>
-      <Toaster position="bottom-right" richColors reverseOrder={false} />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Toaster position="bottom-right" richColors reverseOrder={false} />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
 
-        <Route path="/user-dashboard" element={<User />} />
-        <Route path="/:id" element={<UserDetail />} />
-        <Route path="/ScoreHistory/:id" element={<ScoreHistory />} />
+          <Route path="/user-dashboard" element={<User />} />
+          <Route path="/:id" element={<UserDetail />} />
+          <Route path="/ScoreHistory/:id" element={<ScoreHistory />} />
 
-        <Route path="/admin-dashboard" element={<AdminPanel />}>
-          <Route index element={<Dashboard />} />
-          <Route path="teachers" element={<Teachers />} />
-          <Route path="teacher-page" element={<TeacherPage />} />
-          <Route path="parents" element={<Parents />} />
-          <Route path="students" element={<Students />} />
-          <Route path="student/:id" element={<StudentPage />} />
-          <Route path="student/add" element={<AddStudent />} />
-          <Route path="rooms" element={<Rooms />} />
-          <Route path="team/add" element={<AddTeam />} />
-          <Route path="teams" element={<Teams />} />
-          <Route path="profile" element={<AdminProfile />} />
-          <Route path="teacher/add" element={<AddTeacher />} />
-          <Route path="parent/add" element={<AddParent />} />
-          <Route path="parent/:id" element={<AddParent />} />
-          <Route path="add-room" element={<AddRoom />} />
-        </Route>
+          <Route path="/admin-dashboard" element={<AdminPanel />}>
+            <Route index element={<Dashboard />} />
+            <Route path="teachers" element={<Teachers />} />
+            <Route path="teacher-page" element={<TeacherPage />} />
+            <Route path="parents" element={<Parents />} />
+            <Route path="students" element={<Students />} />
+            <Route path="student/:id" element={<StudentPage />} />
+            <Route path="student/add" element={<AddStudent />} />
+            <Route path="rooms" element={<Rooms />} />
+            <Route path="team/add" element={<AddTeam />} />
+            <Route path="teams" element={<Teams />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="teacher/add" element={<AddTeacher />} />
+            <Route path="parent/add" element={<AddParent />} />
+            <Route path="parent/:id" element={<AddParent />} />
+            <Route path="add-room" element={<AddRoom />} />
+          </Route>
 
-        <Route path="/teacher-dashboard" element={<TeacherPanel />}>
-          <Route index element={<TeacherGroups />} />
-          <Route path="grade/:groupId" element={<GradePage />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="gradies" element={<Gradies />} />
-          <Route path="groups" element={<Groups />} />
-        </Route>
+          <Route path="/teacher-dashboard" element={<TeacherPanel />}>
+            <Route index element={<TeacherGroups />} />
+            <Route path="grade/:groupId" element={<GradePage />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="gradies" element={<Gradies />} />
+            <Route path="groups" element={<Groups />} />
+          </Route>
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+      </Router>
+    </QueryClientProvider>
   );
 };
 
