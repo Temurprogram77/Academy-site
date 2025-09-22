@@ -101,7 +101,7 @@ const Students = () => {
                 colSpan="4"
                 className="text-center px-6 py-4 text-sm text-gray-500"
               >
-                O‘quvchilar topilmadi
+                Kechirasiz malumotlarni yuklashda xatolik yuz berdi!
               </td>
             </tr>
           )}

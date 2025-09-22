@@ -29,7 +29,7 @@ const Dashboard = () => {
         }
       } catch (err) {
         console.error(err);
-        setError("Server bilan ulanishda xatolik.");
+        setError("Kechirasiz hozirda server bilan xatolik.");
       } finally {
         setLoading(false);
       }

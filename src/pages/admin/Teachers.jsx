@@ -32,7 +32,7 @@ const Teachers = () => {
       })
       .catch((err) => {
         console.error("Teachers error:", err);
-        setError("O‘qituvchilarni yuklashda xatolik yuz berdi!");
+        setError("Kechirasiz malumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
   }, [token]);

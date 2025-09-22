@@ -79,7 +79,7 @@ const Teams = () => {
                 colSpan="4"
                 className="text-center px-6 py-4 text-sm text-gray-500"
               >
-                Guruhlar topilmadi
+                Kechirasiz malumotlarni yuklashda xatolik yuz berdi!
               </td>
             </tr>
           )}

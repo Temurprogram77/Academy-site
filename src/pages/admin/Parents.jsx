@@ -30,7 +30,7 @@ const Parents = () => {
       })
       .catch((err) => {
         console.error("Parents error:", err);
-        setError("Ota-onalarni yuklashda xatolik yuz berdi!");
+        setError("Kechirasiz malumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
   }, [token]);

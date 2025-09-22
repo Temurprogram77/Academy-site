@@ -4,11 +4,14 @@ import axios from "axios";
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [loading, setLoading] = useState(true); // ✅ loading state
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // ✅ error state
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     setLoading(true);
+    setError(null); // oldingi xatoni tozalash
+
     axios
       .get("http://167.86.121.42:8080/room", {
         headers: {
@@ -21,6 +24,7 @@ const Rooms = () => {
       })
       .catch((err) => {
         console.error("Error fetching rooms:", err);
+        setError("Kechirasiz malumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
   }, [token]);
@@ -38,6 +42,9 @@ const Rooms = () => {
         <div className="mt-80 flex items-center justify-center bg-[#F3F4F6]">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
         </div>
+      ) : error ? (
+        // ❌ Error ko'rsatish
+        <p className="text-red-500 mt-4 text-center">{error}</p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {rooms.map((room) => (
@@ -73,29 +80,19 @@ const Rooms = () => {
               <table className="min-w-full border-collapse">
                 <tbody>
                   <tr className="border-b">
-                    <td className="px-4 py-3 font-medium text-gray-700">
-                      Xona ID
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {selectedRoom.id}
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-700">Xona ID</td>
+                    <td className="px-4 py-3 text-gray-600">{selectedRoom.id}</td>
                   </tr>
                   <tr className="bg-gray-50 border-b">
-                    <td className="px-4 py-3 font-medium text-gray-700">
-                      O‘quvchilar soni
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-700">O‘quvchilar soni</td>
                     <td className="px-4 py-3 text-gray-600">?</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="px-4 py-3 font-medium text-gray-700">
-                      O‘qituvchi
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-700">O‘qituvchi</td>
                     <td className="px-4 py-3 text-gray-600">?</td>
                   </tr>
                   <tr className="bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-700">
-                      Guruh nomi
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-700">Guruh nomi</td>
                     <td className="px-4 py-3 text-gray-600">?</td>
                   </tr>
                 </tbody>
