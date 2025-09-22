@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import TopStudent from "../components/TopStudent";
 
 const TeacherGroups = () => {
   const [groups, setGroups] = useState([]);
@@ -18,11 +19,11 @@ const TeacherGroups = () => {
     }
 
     axios
-      .get("http://167.86.121.42:8080/group?page=0&size=10", {
+      .get("http://167.86.121.42:8080/user/teacher-dashboard", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        const body = res.data?.data?.body || [];
+        const body = res.data?.data || [];
         setGroups(body);
         if (body.length > 0) setName(body[0].teacherName);
       })
@@ -61,48 +62,40 @@ const TeacherGroups = () => {
       </div>
     );
   }
-
+  console.log(groups);
+  
   return (
     <div className="mt-[3rem]">
       <div className="max-w-[1300px] mx-auto px-4">
-        <h1 className="text-4xl font-bold text-green-400 text-center">
-          Salom, {name}
-        </h1>
-        <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500 mt-[1rem] mb-[2rem]">
-          Sizning guruhlaringiz:
-        </h1>
         {error && (
           <p className="text-red-500 bg-white/30 backdrop-blur-md p-3 rounded-md mb-6">
             {error}
           </p>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-[1rem]">
-          {groups.map((group) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-[1rem]">
             <div
-              key={group.id}
               className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-500"
             >
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                {group.name}
+            <p className="text-gray-700 mb-2 text-[1.2rem]">
+                <span className="font-medium">Guruhlar soni</span>
+              </p>
+              <h2 className="text-4xl font-semibold text-gray-800 mb-2">
+               {groups.groupCount}
               </h2>
-              <p className="text-gray-700 mb-2 text-[1.2rem]">
-                O‘qituvchi:{" "}
-                <span className="font-medium">{group.teacherName}</span>
-              </p>
-              <p className="text-gray-700 mb-3">
-                O‘quvchilar:{" "}
-                <span className="font-medium">{group.studentCount}</span>
-              </p>
-              <button
-                onClick={() => handleGoToGrade(group.id)}
-                className="w-full py-2 rounded-lg text-white font-semibold bg-green-500 hover:bg-green-600 transition"
-              >
-                Baholashga o‘tish
-              </button>
             </div>
-          ))}
+            <div
+              className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-500"
+            >
+            <p className="text-gray-700 mb-2 text-[1.2rem]">
+                <span className="font-medium">O'quvchilar soni</span>
+              </p>
+              <h2 className="text-4xl font-semibold text-gray-800 mb-2">
+               {groups.studentCount}
+              </h2>
+            </div>
         </div>
+        <TopStudent/>
       </div>
     </div>
   );
