@@ -31,6 +31,7 @@ import AddRoom from "./pages/admin/AddRoom";
 
 const App = () => {
   return (
+    
     <Router>
       <Toaster position="bottom-right" richColors reverseOrder={false} />
       <Routes>
