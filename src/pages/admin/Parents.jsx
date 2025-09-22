@@ -122,6 +122,7 @@ const Parents = () => {
                 className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
               >
                 {/* Ism */}
+
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black flex items-center gap-3">
                   {parent.imageUrl ? (
                     <img
@@ -151,9 +152,7 @@ const Parents = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     className="text-[#5DB444] hover:text-green-700 font-medium"
-                    onClick={() =>
-                      navigate(`/admin-dashboard/parent/${parent.id}`)
-                    }
+                    onClick={() => navigate("/teacher-page")}
                   >
                     Ko‘proq
                   </button>
