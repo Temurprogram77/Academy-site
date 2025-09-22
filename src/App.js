@@ -21,13 +21,9 @@ import AdminProfile from "./pages/admin/Profile";
 import { Toaster } from "sonner";
 import UserDetail from "./pages/UserDetail";
 import ScoreHistory from "./pages/ScoreHistory";
-<<<<<<< HEAD
 import Groups from "./pages/Groups";
-
-=======
 import StudentPage from "./pages/admin/studentsPage";
 import TeacherPage from "./pages/admin/teacherPage";
->>>>>>> 7360c87a3276b8fbe8468453468c9da68c4ab768
 
 const App = () => {
   return (
