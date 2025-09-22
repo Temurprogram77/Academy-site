@@ -1,40 +1,47 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+const fetchTopStudents = async (token) => {
+  const { data } = await axios.get(
+    "http://167.86.121.42:8080/user/topStudentsForTeacher",
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  if (data?.success) {
+    return (data.data || [])
+      .sort((a, b) => b.score - a.score) // kamayish tartibida
+      .slice(0, 5); // eng yaxshi 5 ta
+  }
+  return [];
+};
 
 const TopStudent = () => {
-  const [students, setStudents] = useState([]);
   const navigate = useNavigate();
-
   const token = localStorage.getItem("token");
 
-  const api = axios.create({
-    baseURL: "http://167.86.121.42:8080",
-    headers: {
-      Authorization: token ? `Bearer ${token}` : "",
+  if (!token) {
+    navigate("/login");
+  }
+
+  const {
+    data: students = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["top-students"],
+    queryFn: () => fetchTopStudents(token),
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 daqiqa cache
+    onError: (err) => {
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     },
   });
-
-  useEffect(() => {
-    if (!token) {
-      console.error("Token topilmadi, login sahifasiga yo'naltiriladi.");
-      navigate("/login");
-      return;
-    }
-
-    api
-      .get("/user/topStudentsForTeacher")
-      .then((res) => {
-        if (res?.data?.success) {
-          // score bo‘yicha kamayish tartibida sort qilish va eng yaxshi 5 tasini olish
-          const sorted = (res.data.data || [])
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 5);
-          setStudents(sorted);
-        }
-      })
-      .catch((err) => console.error("Top students error:", err));
-  }, [token, navigate]);
 
   const getLevelColor = (level) => {
     switch (level) {
@@ -58,6 +65,22 @@ const TopStudent = () => {
     }
     return phone;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[20vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-green-400"></div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <p className="text-red-500 text-center">
+        Xato: {error.response?.status || ""} ma’lumot olishda muammo!
+      </p>
+    );
+  }
 
   return (
     <div className="my-10">
@@ -112,7 +135,7 @@ const TopStudent = () => {
                   colSpan="6"
                   className="text-center px-3 sm:px-6 py-4 text-gray-500"
                 >
-                  Kechirasiz, top studentlar yuklanmadi!
+                  Kechirasiz, top studentlar topilmadi!
                 </td>
               </tr>
             )}

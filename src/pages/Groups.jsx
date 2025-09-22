@@ -1,50 +1,60 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+const getTeacherDashboard = async (token) => {
+  const { data } = await axios.get("http://167.86.121.42:8080/user/teacher-dashboard", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data?.data;
+};
+
+const getTeacherGroups = async (token) => {
+  const { data } = await axios.get("http://167.86.121.42:8080/group?page=0&size=10", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data?.data?.body || [];
+};
 
 const TeacherGroups = () => {
-  const [groups, setGroups] = useState([]);
-  const [error, setError] = useState(null);
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+  if (!token) {
+    navigate("/login");
+  }
 
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+  // 📌 Dashboard ma'lumotlari
+  const {
+    data: dashboard,
+    isLoading: dashboardLoading,
+    error: dashboardError,
+  } = useQuery({
+    queryKey: ["teacher-dashboard", token],
+    queryFn: () => getTeacherDashboard(token),
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 10,
+    enabled: !!token,
+  });
 
-    axios
-      .get("http://167.86.121.42:8080/group?page=0&size=10", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const body = res.data?.data?.body || [];
-        setGroups(body);
-        if (body.length > 0) setName(body[0].teacherName);
-      })
-      .catch((err) => {
-        if (err.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-        } else {
-          setError(
-            `Xato: ${err.response?.status || ""} So‘rov bajarilmadi`
-          );
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [navigate]);
+  const {
+    data: groups,
+    isLoading: groupsLoading,
+    error: groupsError,
+  } = useQuery({
+    queryKey: ["teacher-groups", token],
+    queryFn: () => getTeacherGroups(token),
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 10,
+    enabled: !!token,
+  });
 
   const handleGoToGrade = (groupId) => {
     navigate(`/teacher-dashboard/grade/${groupId}`);
     localStorage.setItem("groupId", groupId);
   };
 
-  if (loading) {
+  if (dashboardLoading || groupsLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-400"></div>
@@ -52,7 +62,17 @@ const TeacherGroups = () => {
     );
   }
 
-  if (groups.length === 0) {
+  if (dashboardError || groupsError) {
+    return (
+      <div className="flex justify-center items-center h-[50vh]">
+        <h1 className="text-2xl font-bold text-red-600">
+          Xato yuz berdi! {dashboardError?.message || groupsError?.message}
+        </h1>
+      </div>
+    );
+  }
+
+  if (!groups || groups.length === 0) {
     return (
       <div className="flex justify-center items-center h-[50vh]">
         <h1 className="text-2xl font-bold text-gray-600">
@@ -66,18 +86,30 @@ const TeacherGroups = () => {
     <div className="mt-[3rem]">
       <div className="max-w-[1300px] mx-auto px-4">
         <h1 className="text-4xl font-bold text-green-400 text-center">
-          Salom, {name}
+          Salom, {groups[0]?.teacherName}
         </h1>
-        <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500 mt-[1rem] mb-[2rem]">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-[2rem]">
+          <div className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow">
+            <p className="text-gray-700 mb-2 text-lg">Guruhlar soni</p>
+            <h2 className="text-3xl font-semibold text-green-600">
+              {dashboard?.groupCount}
+            </h2>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow">
+            <p className="text-gray-700 mb-2 text-lg">O‘quvchilar soni</p>
+            <h2 className="text-3xl font-semibold text-green-600">
+              {dashboard?.studentCount}
+            </h2>
+          </div>
+        </div>
+
+        <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500 mt-[2rem] mb-[1.5rem]">
           Sizning guruhlaringiz:
         </h1>
-        {error && (
-          <p className="text-red-500 bg-white/30 backdrop-blur-md p-3 rounded-md mb-6">
-            {error}
-          </p>
-        )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-[1rem]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {groups.map((group) => (
             <div
               key={group.id}
@@ -86,11 +118,11 @@ const TeacherGroups = () => {
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">
                 {group.name}
               </h2>
-              <p className="text-gray-700 mb-2 text-[1.2rem]">
+              <p className="text-gray-700 mb-2 text-lg">
                 O‘qituvchi:{" "}
                 <span className="font-medium">{group.teacherName}</span>
               </p>
-              <p className="text-gray-700 mb-3">
+              <p className="text-gray-700 mb-3 text-lg">
                 O‘quvchilar:{" "}
                 <span className="font-medium">{group.studentCount}</span>
               </p>
