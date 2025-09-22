@@ -2,10 +2,23 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+// Telefon raqam formatlash funksiyasi
+const formatPhoneNumber = (phone) => {
+  if (!phone) return "Noma'lum";
+  const cleaned = phone.replace(/\D/g, "");
+  const match = cleaned.match(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
+  if (match) {
+    return `+${match[1]} ${match[2]}-${match[3]}-${match[4]}-${match[5]}`;
+  }
+  return phone;
+};
+
 const Teachers = () => {
   const [teachers, setTeachers] = useState([]);
+  const [filteredTeachers, setFilteredTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
@@ -24,18 +37,33 @@ const Teachers = () => {
     }
 
     api
-      .get("/user/search?role=TEACHER&page=0&size=10")
+      .get("/user/search?role=TEACHER&page=0&size=50")
       .then((res) => {
         const arr = res?.data?.data?.body ?? [];
         setTeachers(arr);
+        setFilteredTeachers(arr);
         setLoading(false);
       })
       .catch((err) => {
         console.error("Teachers error:", err);
-        setError("Kechirasiz malumotlarni yuklashda xatolik yuz berdi!");
+        setError("Kechirasiz, malumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
   }, [token]);
+
+  // Search funksiyasi (ism yoki telefon bo'yicha)
+  useEffect(() => {
+    const filtered = teachers.filter((teacher) => {
+      const nameMatch = teacher.fullName
+        ?.toLowerCase()
+        .includes(search.toLowerCase());
+      const phoneMatch = teacher.phone
+        ?.replace(/\D/g, "")
+        .includes(search.replace(/\D/g, ""));
+      return nameMatch || phoneMatch;
+    });
+    setFilteredTeachers(filtered);
+  }, [search, teachers]);
 
   if (loading) {
     return (
@@ -55,7 +83,18 @@ const Teachers = () => {
 
   return (
     <div className="px-6">
-      <table className="min-w-full divide-y divide-gray-200 my-10 border shadow-lg rounded-xl overflow-hidden">
+      {/* Search input */}
+      <div className="mt-6">
+        <input
+          type="text"
+          placeholder="Ism yoki telefon bo‘yicha qidirish..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full border px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+
+      <table className="min-w-full divide-y divide-gray-200 my-6 border shadow-lg rounded-xl overflow-hidden">
         <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
@@ -74,8 +113,8 @@ const Teachers = () => {
         </thead>
 
         <tbody className="bg-white divide-y divide-gray-200">
-          {teachers.length > 0 ? (
-            teachers.map((teacher, idx) => (
+          {filteredTeachers.length > 0 ? (
+            filteredTeachers.map((teacher, idx) => (
               <tr
                 key={teacher.id || idx}
                 className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
@@ -96,7 +135,7 @@ const Teachers = () => {
 
                 {/* Telefon */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {teacher.phone || "No phone"}
+                  {formatPhoneNumber(teacher.phone)}
                 </td>
 
                 {/* Role */}

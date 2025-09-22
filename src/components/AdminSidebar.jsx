@@ -35,7 +35,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
         onClick={() => setIsOpen(false)}
       ></div>
       <div
-        className={`bg-white overflow-y-scroll h-screen shadow-md fixed top-0 left-0 z-50 md:w-72 w-full transform transition-transform duration-300
+        className={`bg-white lg:overflow-hidden overflow-y-scroll h-screen shadow-md fixed top-0 left-0 z-50 md:w-72 w-full transform transition-transform duration-300
                   ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
                   } lg:translate-x-0 lg:static lg:block`}
@@ -70,21 +70,6 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
                 >
                   <TiHomeOutline />
                   Dashboard
-                </div>
-              </Link>
-
-              <Link
-                to="/admin-dashboard/profile"
-                className="w-full px-5"
-                onClick={() => setIsOpen(false)}
-              >
-                <div
-                  className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl duration-300 ${isActive(
-                    "/admin-dashboard/profile"
-                  )}`}
-                >
-                  <User size={16} />
-                  Profile
                 </div>
               </Link>
 
