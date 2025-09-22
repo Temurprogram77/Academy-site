@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
@@ -7,12 +8,10 @@ const Rooms = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [searchTerm, setSearchTerm] = useState("");
-  const [newRoom, setNewRoom] = useState({ name: "" });
-  const [adding, setAdding] = useState(false);
 
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   // 📌 Rooms fetch qilish
   useEffect(() => {
@@ -51,31 +50,6 @@ const Rooms = () => {
     );
   };
 
-  // 📌 Room qo‘shish
-  const handleAddRoom = () => {
-    if (!newRoom.name.trim()) {
-      alert("Xona nomini kiriting!");
-      return;
-    }
-    setAdding(true);
-
-    axios
-      .post("http://167.86.121.42:8080/room/save", newRoom, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then(() => {
-        fetchRooms();
-        setNewRoom({ name: "" });
-        setAdding(false);
-      })
-      .catch((err) => {
-        console.error("Error adding room:", err);
-        setAdding(false);
-      });
-  };
-
   return (
     <div className="p-8">
       {/* Search & Add */}
@@ -90,20 +64,12 @@ const Rooms = () => {
         />
 
         {/* Add */}
-        <div className="flex gap-2 w-full md:w-1/2">
-          <input
-            type="text"
-            placeholder="Yangi xona nomi"
-            value={newRoom.name}
-            onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
-            className="border border-gray-300 rounded-lg px-4 py-2 flex-1 focus:ring-2 focus:ring-green-500"
-          />
+        <div className="flex w-full md:w-1/2 justify-end">
           <button
-            onClick={handleAddRoom}
-            disabled={adding}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+            onClick={() => navigate("/admin-dashboard/add-room")}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
           >
-            {adding ? "Qo‘shilmoqda..." : "Qo‘shish"}
+            Yangi xona qo‘shish
           </button>
         </div>
       </div>
@@ -147,8 +113,12 @@ const Rooms = () => {
               <table className="min-w-full border-collapse">
                 <tbody>
                   <tr className="border-b">
-                    <td className="px-4 py-3 font-medium text-gray-700">Xona ID</td>
-                    <td className="px-4 py-3 text-gray-600">{selectedRoom.id}</td>
+                    <td className="px-4 py-3 font-medium text-gray-700">
+                      Xona ID
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {selectedRoom.id}
+                    </td>
                   </tr>
                   <tr className="bg-gray-50 border-b">
                     <td className="px-4 py-3 font-medium text-gray-700">
@@ -157,11 +127,15 @@ const Rooms = () => {
                     <td className="px-4 py-3 text-gray-600">?</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="px-4 py-3 font-medium text-gray-700">O‘qituvchi</td>
+                    <td className="px-4 py-3 font-medium text-gray-700">
+                      O‘qituvchi
+                    </td>
                     <td className="px-4 py-3 text-gray-600">?</td>
                   </tr>
                   <tr className="bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-700">Guruh nomi</td>
+                    <td className="px-4 py-3 font-medium text-gray-700">
+                      Guruh nomi
+                    </td>
                     <td className="px-4 py-3 text-gray-600">?</td>
                   </tr>
                 </tbody>

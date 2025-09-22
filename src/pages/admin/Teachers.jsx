@@ -154,7 +154,7 @@ const Teachers = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     onClick={() =>
-                      navigate(`/admin-dashboard/teacher/${teacher.id}`)
+                      navigate(`/admin-dashboard/teacher-page`)
                     }
                     className="text-[#5DB444] hover:text-green-700 font-medium"
                   >

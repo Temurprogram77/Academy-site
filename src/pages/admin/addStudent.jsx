@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
@@ -11,21 +11,39 @@ const AddStudent = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [imgUrl, setImgUrl] = useState(""); // foydalanuvchi URL kiritmasa bo‘ladi
-  const [groupId, setGroupId] = useState(1);
+  const [imgUrl, setImgUrl] = useState(""); 
+  const [groupId, setGroupId] = useState(""); 
+  const [groups, setGroups] = useState([]); // 📌 Guruhlar
   const [parentPhone, setParentPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  const defaultImg = "https://i.ibb.co/6t0KxkX/default-user.png"; 
+
+  // 📌 Guruhlarni olib kelish
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const res = await axios.get("http://167.86.121.42:8080/group/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data?.success) {
+          setGroups(res.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching groups:", err);
+        toast.error("Guruhlarni yuklashda xatolik!");
+      }
+    };
+    fetchGroups();
+  }, [token]);
+
   // Regex qoidalari
   const nameRegex = /^.{3,}$/;
   const phoneRegex = /^998\d{9}$/;
   const passwordRegex = /^.{6,}$/;
-  const groupRegex = /^[0-9]+$/;
-
-  const defaultImg = "https://i.ibb.co/6t0KxkX/default-user.png"; // default user icon
 
   const handleAddStudent = async () => {
     if (!nameRegex.test(fullName)) {
@@ -40,12 +58,12 @@ const AddStudent = () => {
       toast.error("Parol kamida 6 ta belgidan iborat bo‘lishi kerak!");
       return;
     }
-    if (!groupRegex.test(groupId)) {
-      toast.error("Group ID faqat raqam bo‘lishi kerak!");
+    if (!groupId) {
+      toast.error("Guruhni tanlang!");
       return;
     }
     if (parentPhone && !phoneRegex.test(parentPhone)) {
-      toast.error("Parent telefon raqam noto‘g‘ri!");
+      toast.error("Ota-ona telefon raqami noto‘g‘ri!");
       return;
     }
 
@@ -56,9 +74,9 @@ const AddStudent = () => {
         {
           fullName,
           phone: phoneNumber,
-          imgUrl: imgUrl.trim() !== "" ? imgUrl : defaultImg, // agar bo‘sh bo‘lsa default
+          imgUrl: imgUrl.trim() !== "" ? imgUrl : defaultImg,
           password,
-          groupId: Number(groupId),
+          groupId: Number(groupId), // 📌 select-dan tanlangan id yuboriladi
           parentPhone: parentPhone || "",
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -94,7 +112,7 @@ const AddStudent = () => {
           country={"uz"}
           value={phoneNumber}
           onChange={(phone) => setPhoneNumber(phone)}
-          inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          inputClass="w-full border w-[400px] px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
           placeholder="Telefon raqam"
           enableAreaCodes={true}
           disableDropdown={true}
@@ -124,13 +142,19 @@ const AddStudent = () => {
           className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
         />
 
-        <input
-          type="number"
-          placeholder="Group ID"
+        {/* 📌 Guruh select */}
+        <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
-          className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
+          className="border px-4 py-2 rounded-md focus:outline-none bg-transparent focus:ring-2 focus:ring-green-500"
+        >
+          <option value="">Guruhni tanlang</option>
+          {groups.map((group) => (
+            <option key={group.id} value={group.id}>
+              {group.name}
+            </option>
+          ))}
+        </select>
 
         <PhoneInput
           country={"uz"}

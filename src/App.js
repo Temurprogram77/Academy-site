@@ -23,15 +23,15 @@ import UserDetail from "./pages/UserDetail";
 import ScoreHistory from "./pages/ScoreHistory";
 import Groups from "./pages/Groups";
 import StudentPage from "./pages/admin/studentsPage";
-import TeacherPage from "./pages/admin/teacherPage";
+import TeacherPage from "./pages/admin/TeaacherPage";
 import AddTeacher from "./pages/admin/AddTeacher";
 import AddParent from "./pages/admin/AddParent";
 import AddStudent from "./pages/admin/addStudent";
 import AddRoom from "./pages/admin/AddRoom";
+import AddTeam from "./pages/admin/addTeam";
 
 const App = () => {
   return (
-    
     <Router>
       <Toaster position="bottom-right" richColors reverseOrder={false} />
       <Routes>
@@ -45,18 +45,19 @@ const App = () => {
         <Route path="/admin-dashboard" element={<AdminPanel />}>
           <Route index element={<Dashboard />} />
           <Route path="teachers" element={<Teachers />} />
-          <Route path="teacher/:id" element={<TeacherPage />} />
+          <Route path="teacher-page" element={<TeacherPage />} />
           <Route path="parents" element={<Parents />} />
           <Route path="students" element={<Students />} />
           <Route path="student/:id" element={<StudentPage />} />
           <Route path="student/add" element={<AddStudent />} />
           <Route path="rooms" element={<Rooms />} />
-          <Route path="team/add" element={<AddRoom />} />
+          <Route path="team/add" element={<AddTeam />} />
           <Route path="teams" element={<Teams />} />
           <Route path="profile" element={<AdminProfile />} />
           <Route path="teacher/add" element={<AddTeacher />} />
           <Route path="parent/add" element={<AddParent />} />
           <Route path="parent/:id" element={<AddParent />} />
+          <Route path="add-room" element={<AddRoom />} />
         </Route>
 
         <Route path="/teacher-dashboard" element={<TeacherPanel />}>
