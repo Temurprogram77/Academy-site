@@ -42,7 +42,7 @@ const TeacherProfile = () => {
         });
       } catch (err) {
         console.error(err);
-        toast.error("Profilni yuklashda xatolik ");
+        toast.error("Profilni yuklashda xatolik");
       } finally {
         setLoading(false);
       }
@@ -58,15 +58,15 @@ const TeacherProfile = () => {
     };
 
     try {
-      await axios.put(
-        "http://167.86.121.42:8080/user",
-        updatedData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put("http://167.86.121.42:8080/user", updatedData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProfile(updatedData);
       setFormData(updatedData);
       setEditing(false);
       toast.success("Profil muvaffaqiyatli tahrirlandi!");
+
+      window.dispatchEvent(new Event("profileUpdated"));
     } catch (err) {
       console.error(err);
       toast.error("Profilni yangilashda xatolik");
@@ -114,7 +114,13 @@ const TeacherProfile = () => {
             </button>
           </div>
         ) : (
-          <div className="mt-6 w-full space-y-3">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="mt-6 w-full space-y-3"
+          >
             <input
               type="text"
               value={formData.fullName}
@@ -142,21 +148,24 @@ const TeacherProfile = () => {
               className="w-full border px-3 py-2 rounded-lg"
               placeholder="Rasm URL"
             />
+
             <div className="flex justify-end gap-3 mt-4">
               <button
+                type="button"
                 onClick={() => setEditing(false)}
                 className="px-4 py-2 rounded-lg border flex items-center gap-2"
               >
                 <IoMdCloseCircle /> Bekor qilish
               </button>
+
               <button
-                onClick={handleSave}
+                type="submit"
                 className="px-6 py-2 rounded-lg text-white bg-gradient-to-r from-green-400 to-green-600 hover:opacity-90 transition"
               >
                 Saqlash
               </button>
             </div>
-          </div>
+          </form>
         )}
       </div>
     </div>

@@ -14,25 +14,34 @@ const TeacherNavbar = () => {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
+  const fetchProfile = async () => {
+    try {
+      const res = await axios.get("http://167.86.121.42:8080/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProfile({
+        fullName: res.data.data.fullName || "",
+        imageUrl: res.data.data.imageUrl || defaultImage,
+      });
+    } catch (err) {
+      console.error(err);
+      setProfile({
+        fullName: "Teacher Name",
+        imageUrl: defaultImage,
+      });
+    }
+  };
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await axios.get("http://167.86.121.42:8080/user", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setProfile({
-          fullName: res.data.data.fullName || "",
-          imageUrl: res.data.data.imageUrl || defaultImage,
-        });
-      } catch (err) {
-        console.error(err);
-        setProfile({
-          fullName: "Teacher Name",
-          imageUrl: defaultImage,
-        });
-      }
-    };
     fetchProfile();
+
+    // 🔹 Profile yangilanganda qayta fetch qilish
+    const handleUpdate = () => fetchProfile();
+    window.addEventListener("profileUpdated", handleUpdate);
+
+    return () => {
+      window.removeEventListener("profileUpdated", handleUpdate);
+    };
   }, [token]);
 
   const handleClick = () => {
