@@ -8,6 +8,7 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({ fullName: "", phone: "" });
+  const [loading, setLoading] = useState(true); // ✅ loading qo‘shildi
 
   const fileInputRef = useRef(null);
   const token = localStorage.getItem("token");
@@ -33,8 +34,12 @@ const Profile = () => {
           fullName: res.data.data.fullName,
           phone: res.data.data.phone,
         });
+        setLoading(false); // ✅ ma’lumot kelganda loading tugaydi
       })
-      .catch((err) => console.error("User API error:", err));
+      .catch((err) => {
+        console.error("User API error:", err);
+        setLoading(false);
+      });
   }, [token]);
 
   // Rasm yuklash
@@ -58,23 +63,34 @@ const Profile = () => {
   // PUT orqali update
   const handleSave = async () => {
     try {
-      await axios.put(
-        "http://167.86.121.42:8080/user",
-        {
-          fullName: formData.fullName,
-          phone: formData.phone,
-          imageUrl: image,
+      const form = new FormData();
+      form.append("fullName", formData.fullName);
+      form.append("phone", formData.phone);
+      form.append("image", fileInputRef.current.files[0]); // faylni jo'natish
+
+      await axios.put("http://167.86.121.42:8080/user", form, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUser({ ...user, ...formData, imageUrl: image });
-      setEditing(false);
+      });
+
       toast.success("Ma'lumot muvaffaqiyatli yangilandi ✅");
+      setEditing(false);
     } catch (err) {
       console.error("Update error:", err);
       toast.error("Xatolik yuz berdi ❌");
     }
   };
+
+  // Agar loading bo‘lsa loader qaytaradi
+  if (loading) {
+    return (
+      <div className="mt-80 flex items-center justify-center bg-[#F3F4F6]">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-4 bg-white m-6 rounded-xl">
@@ -144,7 +160,7 @@ const Profile = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500">Ma'lumot yuklanmoqda...</p>
+            <p className="text-gray-500">Ma'lumot topilmadi</p>
           )}
         </div>
       </div>

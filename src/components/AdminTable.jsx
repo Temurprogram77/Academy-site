@@ -29,7 +29,6 @@ const AdminTable = () => {
       .get("/user/search?role=STUDENT&page=0&size=10")
       .then((res) => {
         const arr = res?.data?.data?.body ?? [];
-        console.log("Students array:", arr);
         setStudents(arr);
       })
       .catch((err) => console.error("Students error:", err));
@@ -51,7 +50,6 @@ const AdminTable = () => {
       .get("/user/search?role=TEACHER&page=0&size=10")
       .then((res) => {
         const arr = res?.data?.data?.body ?? [];
-        console.log("Teachers array:", arr);
         setTeachers(arr);
       })
       .catch((err) => console.error("Teachers error:", err));
@@ -140,7 +138,7 @@ const AdminTable = () => {
               <td className="px-6 py-4">
                 <button
                   className="text-indigo-500 hover:text-indigo-700 font-medium"
-                  onClick={() => navigate(`/student/${student.id}`)}
+                  onClick={() => navigate(`/admin-dashboard/student/${student.id}`)}
                 >
                   Ko'proq
                 </button>

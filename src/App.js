@@ -21,6 +21,8 @@ import AdminProfile from "./pages/admin/Profile";
 import { Toaster } from "sonner";
 import UserDetail from "./pages/UserDetail";
 import ScoreHistory from "./pages/ScoreHistory";
+import StudentPage from "./pages/admin/studentsPage";
+import TeacherPage from "./pages/admin/teacherPage";
 
 const App = () => {
   return (
@@ -37,9 +39,10 @@ const App = () => {
         <Route path="/admin-dashboard" element={<AdminPanel />}>
           <Route index element={<Dashboard />} />
           <Route path="teachers" element={<Teachers />} />
+          <Route path="teacher/:id" element={<TeacherPage />} />
           <Route path="parents" element={<Parents />} />
           <Route path="students" element={<Students />} />
-          <Route path="/student/:id" element={<StudentPage />} />
+          <Route path="student/:id" element={<StudentPage />} />
           <Route path="rooms" element={<Rooms />} />
           <Route path="teams" element={<Teams />} />
           <Route path="profile" element={<AdminProfile />} />
