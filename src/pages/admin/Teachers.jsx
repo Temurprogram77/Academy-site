@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { TiPlusOutline } from "react-icons/ti";
+import { FiUser } from "react-icons/fi";
 
 // Telefon raqam formatlash funksiyasi
 const formatPhoneNumber = (phone) => {
@@ -29,6 +31,7 @@ const Teachers = () => {
     },
   });
 
+  // Teachers ma'lumotlarini olish
   useEffect(() => {
     if (!token) {
       setError("Token topilmadi!");
@@ -51,17 +54,15 @@ const Teachers = () => {
       });
   }, [token]);
 
-  // Search funksiyasi (ism yoki telefon bo'yicha)
+  // Name bo‘yicha search
   useEffect(() => {
+    const normalizedSearch = (search || "").toLowerCase().trim();
+
     const filtered = teachers.filter((teacher) => {
-      const nameMatch = teacher.fullName
-        ?.toLowerCase()
-        .includes(search.toLowerCase());
-      const phoneMatch = teacher.phone
-        ?.replace(/\D/g, "")
-        .includes(search.replace(/\D/g, ""));
-      return nameMatch || phoneMatch;
+      const name = (teacher.fullName || "").toLowerCase();
+      return name.includes(normalizedSearch);
     });
+
     setFilteredTeachers(filtered);
   }, [search, teachers]);
 
@@ -83,14 +84,22 @@ const Teachers = () => {
 
   return (
     <div className="px-6">
-      {/* Search input */}
-      <div className="mt-6">
+      {/* Add Teacher va Search */}
+      <div className="flex items-center justify-between mt-6 mb-4">
+        <button
+          onClick={() => navigate("/admin-dashboard/teacher/add")}
+          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        >
+          <TiPlusOutline size={20} />
+          <span>Add New Teacher</span>
+        </button>
+
         <input
           type="text"
-          placeholder="Ism yoki telefon bo‘yicha qidirish..."
+          placeholder="Ism bo‘yicha qidirish..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full border px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-1/3 border px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
@@ -119,7 +128,6 @@ const Teachers = () => {
                 key={teacher.id || idx}
                 className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
               >
-                {/* Ism */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
                   {teacher.imageUrl ? (
                     <img
@@ -128,22 +136,21 @@ const Teachers = () => {
                       className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-300"></div>
+                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                      <FiUser className="text-gray-500" size={16} />
+                    </div>
                   )}
                   {teacher.fullName || "No name"}
                 </td>
 
-                {/* Telefon */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {formatPhoneNumber(teacher.phone)}
                 </td>
 
-                {/* Role */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {teacher.role || "TEACHER"}
                 </td>
 
-                {/* Ko‘proq tugmasi */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     onClick={() =>
