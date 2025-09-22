@@ -1,82 +1,102 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState, useRef } from "react";
 import { IoMdCloseCircle } from "react-icons/io";
 import { toast } from "sonner";
+import { Pen } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../api/axios";
 
 const defaultImage =
   "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg";
 
-const TeacherProfile = () => {
-  const [profile, setProfile] = useState({
-    fullName: "",
-    phone: "",
-    imageUrl: defaultImage,
+const fetchProfile = async () => {
+  const { data } = await api.get("/user");
+  return data.data;
+};
+
+const updateProfile = async (updatedData) => {
+  await api.put("/user", updatedData);
+};
+
+const uploadFile = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await api.post("/api/v1/files/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
+  return data?.url || data;
+};
+
+const TeacherProfile = () => {
+  const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
     imageUrl: defaultImage,
   });
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [role, setRole] = useState("");
+  const fileInputRef = useRef(null);
+  const queryClient = useQueryClient();
 
-  const token = localStorage.getItem("token");
+  const {
+    data: profile,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["profile"],
+    queryFn: fetchProfile,
+    onSuccess: (data) => {
+      setFormData({
+        fullName: data.fullName || "",
+        phone: data.phone || "",
+        imageUrl: data.imageUrl || defaultImage,
+      });
+    },
+  });
 
-  useEffect(() => {
-    setRole(localStorage.getItem("role"));
-    const fetchProfile = async () => {
-      try {
-        const res = await axios.get("http://167.86.121.42:8080/user", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setProfile({
-          fullName: res.data.data.fullName || "",
-          phone: res.data.data.phone || "",
-          imageUrl: res.data.data.imageUrl || defaultImage,
-        });
-        setFormData({
-          fullName: res.data.data.fullName || "",
-          phone: res.data.data.phone || "",
-          imageUrl: res.data.data.imageUrl || defaultImage,
-        });
-      } catch (err) {
-        console.error(err);
-        toast.error("Profilni yuklashda xatolik");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, [token]);
+  const mutation = useMutation({
+    mutationFn: updateProfile,
+    onSuccess: () => {
+      toast.success("Profil muvaffaqiyatli yangilandi!");
+      queryClient.invalidateQueries(["profile"]);
+      window.dispatchEvent(new Event("profileUpdated"));
+      setEditing(false);
+    },
+    onError: () => {
+      toast.error("Profilni yangilashda xatolik");
+    },
+  });
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const uploadedUrl = await uploadFile(file);
+      setFormData((prev) => ({ ...prev, imageUrl: uploadedUrl }));
+      toast.success("Rasm muvaffaqiyatli yuklandi!");
+    } catch {
+      toast.error("Rasm yuklashda xatolik");
+    }
+  };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     const updatedData = {
       fullName: formData.fullName.trim() || profile.fullName,
       phone: formData.phone.trim() || profile.phone,
       imageUrl: formData.imageUrl.trim() || profile.imageUrl,
     };
-
-    try {
-      await axios.put("http://167.86.121.42:8080/user", updatedData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProfile(updatedData);
-      setFormData(updatedData);
-      setEditing(false);
-      toast.success("Profil muvaffaqiyatli tahrirlandi!");
-
-      window.dispatchEvent(new Event("profileUpdated"));
-    } catch (err) {
-      console.error(err);
-      toast.error("Profilni yangilashda xatolik");
-    }
+    mutation.mutate(updatedData);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[50vh]">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-400"></div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center h-[50vh]">
+        <p className="text-red-500">Profilni yuklashda xatolik</p>
       </div>
     );
   }
@@ -87,11 +107,31 @@ const TeacherProfile = () => {
         Mening Profilim
       </h1>
       <div className="flex flex-col items-center">
-        <img
-          src={profile.imageUrl}
-          alt="profile"
-          className="w-32 h-32 rounded-full object-cover border-4 border-green-300"
-        />
+        <div className="relative">
+          <img
+            src={formData.imageUrl}
+            alt="profile"
+            className="w-32 h-32 rounded-full object-cover border-4 border-green-300"
+          />
+          {editing && (
+            <>
+              <button
+                onClick={() => fileInputRef.current.click()}
+                className="absolute bottom-2 right-2 bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600"
+              >
+                <Pen size={18} />
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden"
+                accept="image/*"
+              />
+            </>
+          )}
+        </div>
+
         {!editing ? (
           <div className="mt-6 text-lg text-gray-700 space-y-2 w-full">
             <div className="flex justify-between border-b pb-1">
@@ -101,10 +141,6 @@ const TeacherProfile = () => {
             <div className="flex justify-between border-b pb-1">
               <strong>Telefon:</strong>
               <span>{profile.phone}</span>
-            </div>
-            <div className="flex justify-between border-b pb-1">
-              <strong>Rol:</strong>
-              <span>{role}</span>
             </div>
             <button
               onClick={() => setEditing(true)}
@@ -139,15 +175,6 @@ const TeacherProfile = () => {
               className="w-full border px-3 py-2 rounded-lg"
               placeholder="Telefon"
             />
-            <input
-              type="text"
-              value={formData.imageUrl}
-              onChange={(e) =>
-                setFormData({ ...formData, imageUrl: e.target.value })
-              }
-              className="w-full border px-3 py-2 rounded-lg"
-              placeholder="Rasm URL"
-            />
 
             <div className="flex justify-end gap-3 mt-4">
               <button
@@ -160,9 +187,10 @@ const TeacherProfile = () => {
 
               <button
                 type="submit"
+                disabled={mutation.isLoading}
                 className="px-6 py-2 rounded-lg text-white bg-gradient-to-r from-green-400 to-green-600 hover:opacity-90 transition"
               >
-                Saqlash
+                {mutation.isLoading ? "Saqlanmoqda..." : "Saqlash"}
               </button>
             </div>
           </form>
