@@ -39,7 +39,7 @@ const GradePage = () => {
   const token = localStorage.getItem("token");
   const groupId = localStorage.getItem("groupId");
 
-  const [localScores, setLocalScores] = useState({}); 
+  const [localScores, setLocalScores] = useState({});
 
   if (!token || !groupId) {
     navigate("/login");
@@ -64,6 +64,7 @@ const GradePage = () => {
     onSuccess: (_, { studentId }) => {
       toast.success("Baho saqlandi ✅");
       queryClient.invalidateQueries(["students", token, groupId]);
+      queryClient.invalidateQueries(["top-students", token, groupId]);
       setLocalScores((prev) => ({
         ...prev,
         [studentId]: { homeworkScore: "", activityScore: "", attendanceScore: "" },

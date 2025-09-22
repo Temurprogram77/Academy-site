@@ -24,7 +24,6 @@ const TeacherGroups = () => {
     navigate("/login");
   }
 
-  // 📌 Dashboard ma'lumotlari
   const {
     data: dashboard,
     isLoading: dashboardLoading,
@@ -88,22 +87,6 @@ const TeacherGroups = () => {
         <h1 className="text-4xl font-bold text-green-400 text-center">
           Salom, {groups[0]?.teacherName}
         </h1>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-[2rem]">
-          <div className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow">
-            <p className="text-gray-700 mb-2 text-lg">Guruhlar soni</p>
-            <h2 className="text-3xl font-semibold text-green-600">
-              {dashboard?.groupCount}
-            </h2>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow">
-            <p className="text-gray-700 mb-2 text-lg">O‘quvchilar soni</p>
-            <h2 className="text-3xl font-semibold text-green-600">
-              {dashboard?.studentCount}
-            </h2>
-          </div>
-        </div>
 
         <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500 mt-[2rem] mb-[1.5rem]">
           Sizning guruhlaringiz:

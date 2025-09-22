@@ -1,11 +1,10 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-const fetchTopStudents = async (token) => {
+const fetchTopStudents = async (token, groupId) => {
   const { data } = await axios.get(
-    "http://167.86.121.42:8080/user/topStudentsForTeacher",
+    `http://167.86.121.42:8080/user/topStudentsForTeacher?groupId=${groupId}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }
@@ -21,12 +20,11 @@ const fetchTopStudents = async (token) => {
 const TopStudent = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const groupId = localStorage.getItem("groupId");
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/login");
-    }
-  }, [token, navigate]);
+  if (!token) {
+    navigate("/login");
+  }
 
   const {
     data: students = [],
@@ -34,11 +32,11 @@ const TopStudent = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["top-students"],
-    queryFn: () => fetchTopStudents(token),
-    enabled: !!token,
+    queryKey: ["top-students", token, groupId], // 🔑 token va groupId qo‘shildi
+    queryFn: () => fetchTopStudents(token, groupId),
     retry: false,
     staleTime: 1000 * 60 * 5,
+    enabled: !!token && !!groupId, // 🔑 token va groupId bo‘lsa query ishlaydi
     onError: (err) => {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");

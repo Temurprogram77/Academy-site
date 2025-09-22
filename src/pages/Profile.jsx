@@ -8,18 +8,15 @@ import api from "../api/axios";
 const defaultImage =
   "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg";
 
-// Profilni olish
 const fetchProfile = async () => {
   const { data } = await api.get("/user");
   return data.data;
 };
 
-// Profilni yangilash
 const updateProfile = async (updatedData) => {
   await api.put("/user", updatedData);
 };
 
-// Fayl yuklash
 const uploadFile = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -40,7 +37,6 @@ const TeacherProfile = () => {
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
-  // Profilni olish (cache bilan)
   const {
     data: profile,
     isLoading,
@@ -48,11 +44,10 @@ const TeacherProfile = () => {
   } = useQuery({
     queryKey: ["profile"],
     queryFn: fetchProfile,
-    staleTime: 5 * 60 * 1000, // 5 minut cache
-    cacheTime: 10 * 60 * 1000, // 10 minutgacha saqlanadi
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
   });
 
-  // Agar profil o‘zgarsa, formData ni yangilash
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -63,7 +58,6 @@ const TeacherProfile = () => {
     }
   }, [profile]);
 
-  // Update mutation
   const mutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: () => {
@@ -77,7 +71,6 @@ const TeacherProfile = () => {
     },
   });
 
-  // Fayl yuklash
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -90,7 +83,6 @@ const TeacherProfile = () => {
     }
   };
 
-  // Saqlash
   const handleSave = () => {
     const updatedData = {
       fullName: formData.fullName.trim() || profile.fullName,
@@ -100,7 +92,6 @@ const TeacherProfile = () => {
     mutation.mutate(updatedData);
   };
 
-  // Loading
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[50vh]">
@@ -109,7 +100,6 @@ const TeacherProfile = () => {
     );
   }
 
-  // Error
   if (isError) {
     return (
       <div className="flex justify-center items-center h-[50vh]">
