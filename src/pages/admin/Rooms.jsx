@@ -3,14 +3,25 @@ import axios from "axios";
 
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
+  const [filteredRooms, setFilteredRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // ✅ error state
+  const [error, setError] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [newRoom, setNewRoom] = useState({ name: "" });
+  const [adding, setAdding] = useState(false);
+
   const token = localStorage.getItem("token");
 
+  // 📌 Rooms fetch qilish
   useEffect(() => {
+    fetchRooms();
+  }, [token]);
+
+  const fetchRooms = () => {
     setLoading(true);
-    setError(null); // oldingi xatoni tozalash
+    setError(null);
 
     axios
       .get("http://167.86.121.42:8080/room", {
@@ -19,38 +30,97 @@ const Rooms = () => {
         },
       })
       .then((res) => {
-        setRooms(res?.data?.data || []);
+        const data = res?.data?.data || [];
+        setRooms(data);
+        setFilteredRooms(data);
         setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching rooms:", err);
-        setError("Kechirasiz malumotlarni yuklashda xatolik yuz berdi!");
+        setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
-  }, [token]);
+  };
 
-  const handleRoomClick = (room) => {
-    setSelectedRoom(room);
+  // 📌 Qidiruv
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+    setFilteredRooms(
+      rooms.filter((room) => room.name.toLowerCase().includes(value))
+    );
+  };
+
+  // 📌 Room qo‘shish
+  const handleAddRoom = () => {
+    if (!newRoom.name.trim()) {
+      alert("Xona nomini kiriting!");
+      return;
+    }
+    setAdding(true);
+
+    axios
+      .post("http://167.86.121.42:8080/room/save", newRoom, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then(() => {
+        fetchRooms();
+        setNewRoom({ name: "" });
+        setAdding(false);
+      })
+      .catch((err) => {
+        console.error("Error adding room:", err);
+        setAdding(false);
+      });
   };
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">🏫 Xonalar</h1>
+      {/* Search & Add */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Xona nomidan qidiring..."
+          value={searchTerm}
+          onChange={handleSearch}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-1/2 focus:ring-2 focus:ring-green-500"
+        />
+
+        {/* Add */}
+        <div className="flex gap-2 w-full md:w-1/2">
+          <input
+            type="text"
+            placeholder="Yangi xona nomi"
+            value={newRoom.name}
+            onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
+            className="border border-gray-300 rounded-lg px-4 py-2 flex-1 focus:ring-2 focus:ring-green-500"
+          />
+          <button
+            onClick={handleAddRoom}
+            disabled={adding}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+          >
+            {adding ? "Qo‘shilmoqda..." : "Qo‘shish"}
+          </button>
+        </div>
+      </div>
 
       {/* Loading Spinner */}
       {loading ? (
-        <div className="mt-80 flex items-center justify-center bg-[#F3F4F6]">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
+        <div className="mt-40 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
         </div>
       ) : error ? (
-        // ❌ Error ko'rsatish
         <p className="text-red-500 mt-4 text-center">{error}</p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {rooms.map((room) => (
+          {filteredRooms.map((room) => (
             <div
               key={room.id}
-              onClick={() => handleRoomClick(room)}
+              onClick={() => setSelectedRoom(room)}
               className="cursor-pointer bg-white p-6 rounded-2xl border-2 border-transparent 
                         hover:border-green-500 shadow-md hover:shadow-xl 
                         transition transform hover:-translate-y-1"
@@ -68,14 +138,11 @@ const Rooms = () => {
       {selectedRoom && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-[400px] overflow-hidden">
-            {/* Modal Header */}
             <div className="bg-gradient-to-r from-green-500 to-emerald-400 p-4">
               <h2 className="text-xl font-bold text-white">
                 {selectedRoom.name}
               </h2>
             </div>
-
-            {/* Modal Body */}
             <div className="p-6">
               <table className="min-w-full border-collapse">
                 <tbody>
@@ -84,7 +151,9 @@ const Rooms = () => {
                     <td className="px-4 py-3 text-gray-600">{selectedRoom.id}</td>
                   </tr>
                   <tr className="bg-gray-50 border-b">
-                    <td className="px-4 py-3 font-medium text-gray-700">O‘quvchilar soni</td>
+                    <td className="px-4 py-3 font-medium text-gray-700">
+                      O‘quvchilar soni
+                    </td>
                     <td className="px-4 py-3 text-gray-600">?</td>
                   </tr>
                   <tr className="border-b">
@@ -98,13 +167,10 @@ const Rooms = () => {
                 </tbody>
               </table>
             </div>
-
-            {/* Modal Footer */}
             <div className="p-4 flex justify-end bg-gray-50">
               <button
                 onClick={() => setSelectedRoom(null)}
-                className="px-5 py-2 rounded-lg bg-red-500 text-white font-medium 
-                           hover:bg-red-600 transition"
+                className="px-5 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition"
               >
                 Yopish
               </button>
