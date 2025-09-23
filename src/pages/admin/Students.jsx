@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FaUserCircle } from "react-icons/fa";
+import { FiX } from "react-icons/fi";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import toast, { Toaster } from "react-hot-toast";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
-// Telefon raqam formatlash funksiyasi
 const formatPhoneNumber = (phone) => {
   if (!phone) return "Noma'lum";
   const cleaned = phone.replace(/\D/g, "");
@@ -21,19 +24,18 @@ const Students = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null); // Modal uchun tanlangan o'quvchi
+  const [groups, setGroups] = useState([]);
   const token = localStorage.getItem("token");
-  const navigate = useNavigate();
 
   const api = axios.create({
     baseURL: "http://167.86.121.42:8080",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
 
   const defaultImg = "https://i.ibb.co/6t0KxkX/default-user.png";
 
-  // Students ma'lumotlarini olish
   useEffect(() => {
     if (!token) {
       setError("Token topilmadi!");
@@ -51,12 +53,20 @@ const Students = () => {
       })
       .catch((err) => {
         console.error("Students error:", err);
-        setError("Kechirasiz, ma'lumotlarni yuklashda xatolik yuz berdi!");
+        setError("Malumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
+
+    axios
+      .get("http://167.86.121.42:8080/group/all", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        if (res.data?.success) setGroups(res.data.data);
+      })
+      .catch(() => toast.error("Guruhlarni yuklashda xatolik!"));
   }, [token]);
 
-  // Search bo‘yicha filter
   useEffect(() => {
     const normalizedSearch = (search || "").toLowerCase().trim();
     const filtered = students.filter((student) =>
@@ -65,34 +75,29 @@ const Students = () => {
     setFilteredStudents(filtered);
   }, [search, students]);
 
-  if (loading) {
+  const openStudentModal = (student) => {
+    setSelectedStudent(student);
+    setModalOpen(true);
+  };
+
+  if (loading)
     return (
       <div className="mt-80 flex items-center justify-center bg-[#F3F4F6]">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
       </div>
     );
-  }
-
-  if (error) {
+  if (error)
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-red-500 font-semibold">{error}</p>
       </div>
     );
-  }
 
   return (
     <div className="px-6">
-      {/* Add Student va Search */}
+      <Toaster />
       <div className="flex items-center justify-between mt-6 mb-4">
-        <button
-          onClick={() => navigate("/admin-dashboard/student/add")}
-          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-        >
-          <TiPlusOutline size={20} />
-          <span>Add New Student</span>
-        </button>
-
+        <h2 className="text-xl font-semibold text-green-600">O‘quvchilar ro‘yxati</h2>
         <input
           type="text"
           placeholder="Ism bo‘yicha qidirish..."
@@ -115,11 +120,10 @@ const Students = () => {
               Role
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Amal
+              Harakat
             </th>
           </tr>
         </thead>
-
         <tbody className="bg-white divide-y divide-gray-200">
           {filteredStudents.length > 0 ? (
             filteredStudents.map((student, idx) => (
@@ -127,7 +131,6 @@ const Students = () => {
                 key={student.id || idx}
                 className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
               >
-                {/* Ism */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
                   {student.imgUrl ? (
                     <img
@@ -140,24 +143,16 @@ const Students = () => {
                   )}
                   {student.fullName || "No name"}
                 </td>
-
-                {/* Telefon */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {formatPhoneNumber(student.phone)}
                 </td>
-
-                {/* Role */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {student.role || "STUDENT"}
                 </td>
-
-                {/* Ko‘proq */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
-                    onClick={() =>
-                      navigate(`/admin-dashboard/student/${student.id}`)
-                    }
-                    className="text-[#5DB444] hover:text-green-700 font-medium"
+                    onClick={() => openStudentModal(student)}
+                    className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
                   >
                     Ko‘proq
                   </button>
@@ -176,6 +171,46 @@ const Students = () => {
           )}
         </tbody>
       </table>
+
+      {/* Modal */}
+      {modalOpen && selectedStudent && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-xl w-96 relative shadow-2xl">
+            <button
+              onClick={() => setModalOpen(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={24} />
+            </button>
+            <h2 className="text-xl font-semibold mb-4 text-green-600">
+              {selectedStudent.fullName}
+            </h2>
+            <div className="flex flex-col gap-3">
+              <img
+                src={selectedStudent.imgUrl || defaultImg}
+                alt="student"
+                className="w-24 h-24 rounded-full object-cover mx-auto"
+              />
+              <p>
+                <strong>Telefon:</strong>{" "}
+                {formatPhoneNumber(selectedStudent.phone)}
+              </p>
+              <p>
+                <strong>Role:</strong> {selectedStudent.role || "STUDENT"}
+              </p>
+              <p>
+                <strong>Guruh:</strong>{" "}
+                {groups.find((g) => g.id === selectedStudent.groupId)?.name ||
+                  "Noma'lum"}
+              </p>
+              <p>
+                <strong>Parent telefon:</strong>{" "}
+                {formatPhoneNumber(selectedStudent.parentPhone)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

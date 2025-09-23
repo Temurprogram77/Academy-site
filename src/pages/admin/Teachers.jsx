@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
-import { FiUser } from "react-icons/fi";
+import { FiUser, FiX } from "react-icons/fi";
 
 // Telefon raqam formatlash funksiyasi
 const formatPhoneNumber = (phone) => {
@@ -21,17 +20,17 @@ const Teachers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+
   const token = localStorage.getItem("token");
-  const navigate = useNavigate();
 
   const api = axios.create({
     baseURL: "http://167.86.121.42:8080",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
 
-  // Teachers ma'lumotlarini olish
+  // API orqali ustozlarni olish
   useEffect(() => {
     if (!token) {
       setError("Token topilmadi!");
@@ -54,42 +53,49 @@ const Teachers = () => {
       });
   }, [token]);
 
-  // Name bo‘yicha search
+  // Qidiruv bo‘yicha filter
   useEffect(() => {
     const normalizedSearch = (search || "").toLowerCase().trim();
-
-    const filtered = teachers.filter((teacher) => {
-      const name = (teacher.fullName || "").toLowerCase();
-      return name.includes(normalizedSearch);
-    });
-
+    const filtered = teachers.filter((teacher) =>
+      (teacher.fullName || "").toLowerCase().includes(normalizedSearch)
+    );
     setFilteredTeachers(filtered);
   }, [search, teachers]);
 
-  if (loading) {
+  // Modalni ochish faqat kerakli 3 maydon bo‘lsa
+  const openModal = (teacher) => {
+    if (teacher.fullName && teacher.phone && teacher.role) {
+      setSelectedTeacher(teacher);
+      setModalOpen(true);
+    } else {
+      alert("Bu ustozni ma’lumotlarini ko‘rib bo‘lmaydi!");
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedTeacher(null);
+    setModalOpen(false);
+  };
+
+  if (loading)
     return (
       <div className="mt-80 flex items-center justify-center bg-[#F3F4F6]">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-red-500 font-semibold">{error}</p>
       </div>
     );
-  }
 
   return (
     <div className="px-6">
       {/* Add Teacher va Search */}
       <div className="flex items-center justify-between mt-6 mb-4">
-        <button
-          onClick={() => navigate("/admin-dashboard/teacher/add")}
-          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-        >
+        <button className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
           <TiPlusOutline size={20} />
           <span>Add New Teacher</span>
         </button>
@@ -103,6 +109,7 @@ const Teachers = () => {
         />
       </div>
 
+      {/* Teachers jadvali */}
       <table className="min-w-full divide-y divide-gray-200 my-6 border shadow-lg rounded-xl overflow-hidden">
         <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
           <tr>
@@ -146,16 +153,12 @@ const Teachers = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {formatPhoneNumber(teacher.phone)}
                 </td>
-
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {teacher.role || "TEACHER"}
                 </td>
-
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
-                    onClick={() =>
-                      navigate(`/admin-dashboard/teacher-page`)
-                    }
+                    onClick={() => openModal(teacher)}
                     className="text-[#5DB444] hover:text-green-700 font-medium"
                   >
                     Ko‘proq
@@ -175,6 +178,55 @@ const Teachers = () => {
           )}
         </tbody>
       </table>
+
+      {/* Modal */}
+      {modalOpen && selectedTeacher && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-xl w-96 relative shadow-2xl transform transition-transform duration-300 scale-100 hover:scale-105">
+            {/* Yopish tugmasi */}
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={24} />
+            </button>
+
+            {/* Modal Header */}
+            <div className="flex items-center gap-4 mb-4 border-b pb-2">
+              {selectedTeacher.imageUrl ? (
+                <img
+                  src={selectedTeacher.imageUrl}
+                  alt="teacher"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-green-500"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center border-2 border-green-500">
+                  <FiUser className="text-gray-500" size={20} />
+                </div>
+              )}
+              <h2 className="text-2xl font-bold text-green-600">
+                O‘qituvchi ma’lumotlari
+              </h2>
+            </div>
+
+            {/* Modal Body */}
+            <div className="space-y-3 text-gray-700">
+              <p>
+                <span className="font-semibold">Ism:</span>{" "}
+                {selectedTeacher.fullName}
+              </p>
+              <p>
+                <span className="font-semibold">Telefon:</span>{" "}
+                {formatPhoneNumber(selectedTeacher.phone)}
+              </p>
+              <p>
+                <span className="font-semibold">Role:</span>{" "}
+                {selectedTeacher.role}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
