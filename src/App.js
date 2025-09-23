@@ -49,7 +49,6 @@ const App = () => {
             <Route path="teachers" element={<Teachers />} />
             <Route path="parents" element={<Parents />} />
             <Route path="students" element={<Students />} />
-            <Route path="student/:id" element={<StudentPage />} />
             <Route path="rooms" element={<Rooms />} />
             <Route path="team/add" element={<AddTeam />} />
             <Route path="teams" element={<Teams />} />
@@ -67,20 +66,20 @@ const App = () => {
             <Route path="gradies" element={<Gradies />} />
             <Route path="groups" element={<Groups />} />
           </Route>
-        <Route path="/admin-dashboard" element={<AdminPanel />}>
-          <Route index element={<Dashboard />} />
-          <Route path="teachers" element={<Teachers />} />
-          <Route path="parents" element={<Parents />} />
-          <Route path="students" element={<Students />} />
-          <Route path="rooms" element={<Rooms />} />
-          <Route path="team/add" element={<AddTeam />} />
-          <Route path="teams" element={<Teams />} />
-          <Route path="profile" element={<AdminProfile />} />
-          <Route path="teacher/add" element={<AddTeacher />} />
-          <Route path="parent/add" element={<AddParent />} />
-          <Route path="parent/:id" element={<AddParent />} />
-          <Route path="add-room" element={<AddRoom />} />
-        </Route>
+          <Route path="/admin-dashboard" element={<AdminPanel />}>
+            <Route index element={<Dashboard />} />
+            <Route path="teachers" element={<Teachers />} />
+            <Route path="parents" element={<Parents />} />
+            <Route path="students" element={<Students />} />
+            <Route path="rooms" element={<Rooms />} />
+            <Route path="team/add" element={<AddTeam />} />
+            <Route path="teams" element={<Teams />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="teacher/add" element={<AddTeacher />} />
+            <Route path="parent/add" element={<AddParent />} />
+            <Route path="parent/:id" element={<AddParent />} />
+            <Route path="add-room" element={<AddRoom />} />
+          </Route>
 
           <Route path="*" element={<NotFound />} />
         </Routes>
