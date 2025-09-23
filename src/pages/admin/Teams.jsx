@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiX } from "react-icons/fi";
+import toast, { Toaster } from "react-hot-toast";
 
 const weekOptions = [
   "MONDAY",
@@ -12,9 +13,14 @@ const weekOptions = [
   "SATURDAY",
 ];
 
+const api = axios.create({
+  baseURL: "http://167.86.121.42:8080",
+});
+
 const Teams = () => {
   const [teams, setTeams] = useState([]);
   const [filteredTeams, setFilteredTeams] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -26,54 +32,68 @@ const Teams = () => {
     startTime: "",
     endTime: "",
     weekDays: [],
-    teacherId: "",
     roomId: "",
+    teacherId: "",
   });
 
   const token = localStorage.getItem("token");
 
-  const api = axios.create({
-    baseURL: "http://167.86.121.42:8080",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  // Guruh va xonalarni olish
+  const fetchTeams = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [groupsRes, roomsRes] = await Promise.all([
+        api.get("/group?page=0&size=50", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        api.get("/room", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-  // Teams fetch
+      const groupsArr = groupsRes?.data?.data?.body ?? [];
+      const roomsArr = roomsRes?.data?.data ?? [];
+      setTeams(groupsArr);
+      setFilteredTeams(groupsArr);
+      setRooms(roomsArr);
+    } catch (err) {
+      console.error(err);
+      setError("❌ Ma’lumotlarni yuklashda xatolik!");
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
   useEffect(() => {
     if (!token) {
       setError("Token topilmadi!");
       setLoading(false);
       return;
     }
+    fetchTeams();
+  }, [token, fetchTeams]);
 
-    api
-      .get("/group?page=0&size=50")
-      .then((res) => {
-        const arr = res?.data?.data?.body ?? [];
-        setTeams(arr);
-        setFilteredTeams(arr);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Guruhlarni yuklashda xatolik yuz berdi!");
-        setLoading(false);
-      });
-  }, [token]);
-
-  // Search filter
+  // Qidiruv
   useEffect(() => {
-    const normalizedSearch = (search || "").toLowerCase().trim();
-    const filtered = teams.filter(
-      (team) =>
-        (team.name || "").toLowerCase().includes(normalizedSearch) ||
-        (team.teacherName || "").toLowerCase().includes(normalizedSearch)
+    const normalizedSearch = search.toLowerCase().trim();
+    setFilteredTeams(
+      teams.filter((team) =>
+        (team.name || "").toLowerCase().includes(normalizedSearch)
+      )
     );
-    setFilteredTeams(filtered);
   }, [search, teams]);
 
-  const openTeamModal = (team) => {
-    setSelectedTeam(team);
-    setModalOpen(true);
+  const openTeamModal = async (team) => {
+    try {
+      const res = await api.get(`/group/${team.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSelectedTeam(res.data?.data || team);
+      setModalOpen(true);
+    } catch (err) {
+      console.error(err);
+      toast.error("❌ Guruh ma’lumotini olishda xatolik!");
+    }
   };
 
   const handleFormChange = (e) => {
@@ -83,65 +103,69 @@ const Teams = () => {
 
   const handleWeekDaysChange = (e) => {
     const value = e.target.value;
-    setForm((prev) => {
-      const exists = prev.weekDays.includes(value);
-      return {
-        ...prev,
-        weekDays: exists
-          ? prev.weekDays.filter((d) => d !== value)
-          : [...prev.weekDays, value],
-      };
-    });
+    setForm((prev) => ({
+      ...prev,
+      weekDays: prev.weekDays.includes(value)
+        ? prev.weekDays.filter((d) => d !== value)
+        : [...prev.weekDays, value],
+    }));
   };
 
+  // Yangi guruh qo‘shish
   const handleAddTeam = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) return alert("Jamoa nomini kiriting!");
+    if (!form.name.trim()) return toast.error("⚠ Guruh nomini kiriting!");
+    if (!form.roomId) return toast.error("⚠ Xona tanlang!");
+    if (!form.teacherId) return toast.error("⚠ Ustoz ID sini kiriting!");
+
     try {
-      await axios.post(
-        "http://167.86.121.42:8080/group",
+      await api.post(
+        "/group",
         {
-          ...form,
+          name: form.name,
+          startTime: form.startTime,
+          endTime: form.endTime,
+          weekDays: form.weekDays,
           teacherId: Number(form.teacherId),
           roomId: Number(form.roomId),
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Guruh qo‘shildi!");
+
+      toast.success("✅ Guruh qo‘shildi!");
       setAddModal(false);
-      // Refresh teams
-      const res = await api.get("/group?page=0&size=50");
-      setTeams(res.data?.data?.body ?? []);
-      setFilteredTeams(res.data?.data?.body ?? []);
       setForm({
         name: "",
         startTime: "",
         endTime: "",
         weekDays: [],
-        teacherId: "",
         roomId: "",
+        teacherId: "",
       });
+      fetchTeams();
     } catch (err) {
       console.error(err);
-      alert("Guruh qo‘shishda xatolik!");
+      toast.error("❌ Guruh qo‘shishda xatolik!");
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>⏳ Yuklanmoqda...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div className="px-6">
+      <Toaster position="top-right" />
+
       <div className="flex items-center justify-between mt-6 mb-4">
         <button
           onClick={() => setAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 shadow-md transition"
         >
           <TiPlusOutline size={20} /> Yangi Guruh
         </button>
         <input
           type="text"
-          placeholder="Guruh yoki o‘qituvchi bo‘yicha qidirish..."
+          placeholder="Guruh nomidan qidiring..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-1/3 border px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -153,9 +177,6 @@ const Teams = () => {
           <tr>
             <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
               Guruh nomi
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              O‘qituvchi
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
               O‘quvchilar soni
@@ -174,9 +195,6 @@ const Teams = () => {
                   {team.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {team.teacherName || "-"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {team.studentCount ?? 0}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -192,7 +210,7 @@ const Teams = () => {
           ) : (
             <tr>
               <td
-                colSpan="4"
+                colSpan="3"
                 className="text-center px-6 py-4 text-sm text-gray-500"
               >
                 Hech qanday guruh topilmadi
@@ -216,11 +234,22 @@ const Teams = () => {
               {selectedTeam.name}
             </h2>
             <p>
-              <strong>O‘qituvchi:</strong> {selectedTeam.teacherName || "-"}
-            </p>
-            <p>
               <strong>O‘quvchilar soni:</strong>{" "}
               {selectedTeam.studentCount ?? 0}
+            </p>
+            <p>
+              <strong>Xona:</strong> {selectedTeam.roomName || "-"}
+            </p>
+            <p>
+              <strong>Dars vaqti:</strong> {selectedTeam.startTime} -{" "}
+              {selectedTeam.endTime}
+            </p>
+            <p>
+              <strong>Haftada kunlari:</strong>{" "}
+              {selectedTeam.weekDays?.join(", ") || "-"}
+            </p>
+            <p>
+              <strong>Ustoz ID:</strong> {selectedTeam.teacherId || "-"}
             </p>
           </div>
         </div>
@@ -237,7 +266,7 @@ const Teams = () => {
               <FiX size={24} />
             </button>
             <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
-              Yangi jamoa qo‘shish
+              Yangi guruh qo‘shish
             </h2>
             <form className="flex flex-col gap-3" onSubmit={handleAddTeam}>
               <input
@@ -265,6 +294,8 @@ const Teams = () => {
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
+
+              {/* Weekdays */}
               <div className="flex flex-wrap gap-2">
                 {weekOptions.map((day) => (
                   <label key={day} className="flex items-center gap-1">
@@ -278,27 +309,37 @@ const Teams = () => {
                   </label>
                 ))}
               </div>
+
+              {/* TeacherId */}
               <input
                 type="number"
                 name="teacherId"
-                placeholder="Teacher ID"
+                placeholder="Ustoz ID"
                 value={form.teacherId}
                 onChange={handleFormChange}
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
-              <input
-                type="number"
+
+              {/* Room select */}
+              <select
                 name="roomId"
-                placeholder="Room ID"
                 value={form.roomId}
                 onChange={handleFormChange}
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
-              />
+              >
+                <option value="">Xona tanlang</option>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
+
               <button
                 type="submit"
-                className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
+                className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 shadow-md"
               >
                 Qo‘shish
               </button>

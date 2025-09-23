@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
-import { FaUserCircle } from "react-icons/fa";
 import { FiX } from "react-icons/fi";
+import toast, { Toaster } from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import toast, { Toaster } from "react-hot-toast";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
 
+// Telefon formatlash funksiyasi
 const formatPhoneNumber = (phone) => {
   if (!phone) return "Noma'lum";
   const cleaned = phone.replace(/\D/g, "");
   const match = cleaned.match(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
-  if (match) {
+  if (match)
     return `+${match[1]} ${match[2]}-${match[3]}-${match[4]}-${match[5]}`;
-  }
   return phone;
 };
 
@@ -25,7 +23,16 @@ const Students = () => {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null); // Modal uchun tanlangan o'quvchi
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [addModal, setAddModal] = useState(false);
+  const [form, setForm] = useState({
+    fullName: "",
+    phone: "",
+    password: "",
+    parentPhone: "",
+    imgUrl: "",
+    groupId: "",
+  });
   const [groups, setGroups] = useState([]);
   const token = localStorage.getItem("token");
 
@@ -51,8 +58,7 @@ const Students = () => {
         setFilteredStudents(arr);
         setLoading(false);
       })
-      .catch((err) => {
-        console.error("Students error:", err);
+      .catch(() => {
         setError("Malumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
@@ -75,9 +81,54 @@ const Students = () => {
     setFilteredStudents(filtered);
   }, [search, students]);
 
+  const handleFormChange = (name, value) =>
+    setForm((prev) => ({ ...prev, [name]: value }));
   const openStudentModal = (student) => {
     setSelectedStudent(student);
     setModalOpen(true);
+  };
+
+  const handleAddStudent = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!form.fullName || !form.phone || !form.password || !form.parentPhone) {
+      setError("Barcha maydonlar to‘ldirilishi kerak!");
+      return;
+    }
+
+    try {
+      const payload = {
+        fullName: form.fullName,
+        phone: form.phone.replace(/\D/g, ""),
+        password: form.password,
+        parentPhone: form.parentPhone.replace(/\D/g, ""),
+        imgUrl: form.imgUrl || "",
+        groupId: form.groupId ? Number(form.groupId) : null, // integer kerak
+      };
+
+      await axios.post("http://167.86.121.42:8080/auth/saveStudent", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success("Yangi o‘quvchi qo‘shildi!");
+      setAddModal(false);
+      setForm({
+        fullName: "",
+        phone: "",
+        password: "",
+        parentPhone: "",
+        imgUrl: "",
+        groupId: "",
+      });
+
+      const res = await api.get("/user/search?role=STUDENT&page=0&size=50");
+      setStudents(res.data?.data?.body ?? []);
+      setFilteredStudents(res.data?.data?.body ?? []);
+    } catch (err) {
+      console.error("AddStudent error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Server xatosi yuz berdi");
+    }
   };
 
   if (loading)
@@ -86,6 +137,7 @@ const Students = () => {
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
       </div>
     );
+
   if (error)
     return (
       <div className="flex items-center justify-center h-64">
@@ -97,103 +149,109 @@ const Students = () => {
     <div className="px-6">
       <Toaster />
       <div className="flex items-center justify-between mt-6 mb-4">
-        <h2 className="text-xl font-semibold text-green-600">O‘quvchilar ro‘yxati</h2>
+        <button
+          onClick={() => setAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        >
+          <TiPlusOutline size={20} /> Add New Student
+        </button>
         <input
           type="text"
           placeholder="Ism bo‘yicha qidirish..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-1/3 border px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-64 border px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
-      <table className="min-w-full divide-y divide-gray-200 my-6 border shadow-lg rounded-xl overflow-hidden">
-        <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              O‘quvchi
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Telefon
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Role
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Harakat
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {filteredStudents.length > 0 ? (
-            filteredStudents.map((student, idx) => (
-              <tr
-                key={student.id || idx}
-                className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
-              >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
-                  {student.imgUrl ? (
+      <div className="max-h-[70vh] overflow-y-auto border shadow-lg rounded-xl">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                O‘quvchi
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Telefon
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Harakat
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredStudents.length > 0 ? (
+              filteredStudents.map((student, idx) => (
+                <tr
+                  key={student.id || idx}
+                  className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
                     <img
-                      src={student.imgUrl}
+                      src={student.imgUrl || defaultImg}
                       alt="student"
                       className="w-8 h-8 rounded-full object-cover"
                     />
-                  ) : (
-                    <FaUserCircle className="w-8 h-8 text-gray-400" />
-                  )}
-                  {student.fullName || "No name"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {formatPhoneNumber(student.phone)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {student.role || "STUDENT"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    onClick={() => openStudentModal(student)}
-                    className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-                  >
-                    Ko‘proq
-                  </button>
+                    {student.fullName || "No name"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {formatPhoneNumber(student.phone)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {student.role || "STUDENT"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <button
+                      onClick={() => openStudentModal(student)}
+                      className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                    >
+                      Ko‘proq
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="4"
+                  className="text-center px-6 py-4 text-sm text-gray-500"
+                >
+                  O‘quvchilar topilmadi
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td
-                colSpan="4"
-                className="text-center px-6 py-4 text-sm text-gray-500"
-              >
-                O‘quvchilar topilmadi
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Modal */}
       {modalOpen && selectedStudent && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-xl w-96 relative shadow-2xl">
+          <div className="bg-white p-6 rounded-xl w-96 max-h-[80vh] overflow-y-auto relative shadow-2xl">
             <button
               onClick={() => setModalOpen(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
             >
               <FiX size={24} />
             </button>
-            <h2 className="text-xl font-semibold mb-4 text-green-600">
+            <h2 className="text-xl font-semibold mb-4 text-green-600 text-center">
               {selectedStudent.fullName}
             </h2>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 items-center">
               <img
                 src={selectedStudent.imgUrl || defaultImg}
                 alt="student"
-                className="w-24 h-24 rounded-full object-cover mx-auto"
+                className="w-24 h-24 rounded-full object-cover"
               />
               <p>
                 <strong>Telefon:</strong>{" "}
                 {formatPhoneNumber(selectedStudent.phone)}
+              </p>
+              <p>
+                <strong>Parent telefon:</strong>{" "}
+                {formatPhoneNumber(selectedStudent.parentPhone)}
               </p>
               <p>
                 <strong>Role:</strong> {selectedStudent.role || "STUDENT"}
@@ -203,11 +261,99 @@ const Students = () => {
                 {groups.find((g) => g.id === selectedStudent.groupId)?.name ||
                   "Noma'lum"}
               </p>
-              <p>
-                <strong>Parent telefon:</strong>{" "}
-                {formatPhoneNumber(selectedStudent.parentPhone)}
-              </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {addModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto relative shadow-2xl">
+            <button
+              onClick={() => setAddModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={24} />
+            </button>
+            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
+              Yangi o‘quvchi qo‘shish
+            </h2>
+            {error && <p className="text-red-500 text-center mb-2">{error}</p>}
+            <form className="flex flex-col gap-3" onSubmit={handleAddStudent}>
+              <label className="text-sm font-medium text-gray-700">Ism</label>
+              <input
+                type="text"
+                placeholder="Ism"
+                value={form.fullName}
+                onChange={(e) => handleFormChange("fullName", e.target.value)}
+                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+
+              <label className="text-sm font-medium text-gray-700">
+                Telefon raqam
+              </label>
+              <PhoneInput
+                country="uz"
+                value={form.phone}
+                onChange={(value) => handleFormChange("phone", value)}
+                inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Telefon raqam"
+              />
+
+              <label className="text-sm font-medium text-gray-700">
+                Parent telefon
+              </label>
+              <PhoneInput
+                country="uz"
+                value={form.parentPhone}
+                onChange={(value) => handleFormChange("parentPhone", value)}
+                inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Parent telefon"
+              />
+
+              <label className="text-sm font-medium text-gray-700">
+                Rasm URL
+              </label>
+              <input
+                type="text"
+                placeholder="Rasm URL"
+                value={form.imgUrl}
+                onChange={(e) => handleFormChange("imgUrl", e.target.value)}
+                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+
+              <label className="text-sm font-medium text-gray-700">Parol</label>
+              <input
+                type="password"
+                placeholder="Parol"
+                value={form.password}
+                onChange={(e) => handleFormChange("password", e.target.value)}
+                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+
+              <label className="text-sm font-medium text-gray-700">Guruh</label>
+              <select
+                value={form.groupId}
+                onChange={(e) => handleFormChange("groupId", e.target.value)}
+                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="">Guruh tanlang</option>
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="submit"
+                className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
+              >
+                Qo‘shish
+              </button>
+            </form>
           </div>
         </div>
       )}

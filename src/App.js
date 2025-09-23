@@ -22,11 +22,6 @@ import { Toaster } from "sonner";
 import UserDetail from "./pages/UserDetail";
 import ScoreHistory from "./pages/ScoreHistory";
 import Groups from "./pages/Groups";
-import AddTeacher from "./pages/admin/AddTeacher";
-import AddParent from "./pages/admin/AddParent";
-import AddRoom from "./pages/admin/AddRoom";
-import AddTeam from "./pages/admin/addTeam";
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
@@ -50,13 +45,8 @@ const App = () => {
             <Route path="parents" element={<Parents />} />
             <Route path="students" element={<Students />} />
             <Route path="rooms" element={<Rooms />} />
-            <Route path="team/add" element={<AddTeam />} />
             <Route path="teams" element={<Teams />} />
             <Route path="profile" element={<AdminProfile />} />
-            <Route path="teacher/add" element={<AddTeacher />} />
-            <Route path="parent/add" element={<AddParent />} />
-            <Route path="parent/:id" element={<AddParent />} />
-            <Route path="add-room" element={<AddRoom />} />
           </Route>
 
           <Route path="/teacher-dashboard" element={<TeacherPanel />}>
@@ -72,13 +62,8 @@ const App = () => {
             <Route path="parents" element={<Parents />} />
             <Route path="students" element={<Students />} />
             <Route path="rooms" element={<Rooms />} />
-            <Route path="team/add" element={<AddTeam />} />
             <Route path="teams" element={<Teams />} />
             <Route path="profile" element={<AdminProfile />} />
-            <Route path="teacher/add" element={<AddTeacher />} />
-            <Route path="parent/add" element={<AddParent />} />
-            <Route path="parent/:id" element={<AddParent />} />
-            <Route path="add-room" element={<AddRoom />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

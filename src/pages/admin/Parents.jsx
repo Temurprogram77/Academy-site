@@ -2,15 +2,19 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiUser, FiX } from "react-icons/fi";
-import toast, { Toaster } from "react-hot-toast"; // <-- toast import
+import toast, { Toaster } from "react-hot-toast";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
-// Telefon formatlash funksiyasi
+// Telefon formatlash funksiyasi (faqat ko‘rinish uchun)
 const formatPhoneNumber = (phone) => {
   if (!phone) return "Noma'lum";
   const cleaned = phone.replace(/\D/g, "");
-  const match = cleaned.match(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
-  if (match) {
-    return `+${match[1]} ${match[2]}-${match[3]}-${match[4]}-${match[5]}`;
+  if (cleaned.length === 12) {
+    return `+${cleaned.slice(0, 3)} ${cleaned.slice(3, 5)}-${cleaned.slice(
+      5,
+      8
+    )}-${cleaned.slice(8, 10)}-${cleaned.slice(10, 12)}`;
   }
   return phone;
 };
@@ -26,7 +30,7 @@ const Parents = () => {
   const [addModal, setAddModal] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
-    phoneNumber: "",
+    phone: "",
     password: "",
   });
 
@@ -37,6 +41,7 @@ const Parents = () => {
     headers: { Authorization: `Bearer ${token}` },
   });
 
+  // Parentlarni olish
   useEffect(() => {
     if (!token) {
       setError("Token topilmadi!");
@@ -59,6 +64,7 @@ const Parents = () => {
       });
   }, [token]);
 
+  // Qidiruv
   useEffect(() => {
     const normalizedSearch = (search || "").toLowerCase().trim();
     const filtered = parents.filter((parent) =>
@@ -77,8 +83,7 @@ const Parents = () => {
     setSelectedParent(null);
   };
 
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
+  const handleFormChange = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -86,11 +91,7 @@ const Parents = () => {
     e.preventDefault();
     setError("");
 
-    if (
-      !form.fullName.trim() ||
-      !form.phoneNumber.trim() ||
-      !form.password.trim()
-    ) {
+    if (!form.fullName.trim() || !form.phone.trim() || !form.password.trim()) {
       setError("Barcha maydonlar to‘ldirilishi kerak!");
       return;
     }
@@ -98,7 +99,7 @@ const Parents = () => {
     try {
       const payload = {
         fullName: form.fullName.trim(),
-        phoneNumber: form.phoneNumber.replace(/\D/g, ""),
+        phone: form.phone.replace(/\D/g, ""), // APIga yuborish uchun faqat raqam
         password: form.password.trim(),
       };
 
@@ -108,22 +109,20 @@ const Parents = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success("Yangi ota-ona qo‘shildi!"); // <-- alert o‘rniga toast
+      toast.success("Yangi ota-ona qo‘shildi!");
       setAddModal(false);
-      setForm({ fullName: "", phoneNumber: "", password: "" });
+      setForm({ fullName: "", phone: "", password: "" });
 
       const res = await api.get("/user/search?role=PARENT&page=0&size=50");
       setParents(res.data?.data?.body ?? []);
       setFilteredParents(res.data?.data?.body ?? []);
     } catch (err) {
       console.error("AddParent error:", err);
-      if (err.response) {
+      if (err.response)
         setError(err.response.data?.message || "Server xatosi yuz berdi");
-      } else if (err.request) {
+      else if (err.request)
         setError("Serverdan javob olinmadi. Tarmoq muammosi?");
-      } else {
-        setError("Noma’lum xatolik yuz berdi");
-      }
+      else setError("Noma’lum xatolik yuz berdi");
     }
   };
 
@@ -136,7 +135,7 @@ const Parents = () => {
 
   return (
     <div className="px-6">
-      <Toaster position="top-right" /> {/* <-- Toast container */}
+      <Toaster position="top-right" />
       <div className="flex items-center justify-between mt-6 mb-4">
         <button
           onClick={() => setAddModal(true)}
@@ -144,7 +143,6 @@ const Parents = () => {
         >
           <TiPlusOutline size={20} /> Add New Parent
         </button>
-
         <input
           type="text"
           placeholder="Ism bo‘yicha qidirish..."
@@ -153,73 +151,79 @@ const Parents = () => {
           className="w-1/3 border px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
-      <table className="min-w-full divide-y divide-gray-200 my-10 border shadow-lg rounded-xl overflow-hidden">
-        <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Ota-ona
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Telefon raqam
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Role
-            </th>
-            <th className="px-6 py-3"></th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {filteredParents.length > 0 ? (
-            filteredParents.map((parent, idx) => (
-              <tr
-                key={parent.id || idx}
-                className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
-              >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black flex items-center gap-3">
-                  {parent.imageUrl ? (
-                    <img
-                      src={parent.imageUrl}
-                      alt="parent"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                      <FiUser className="text-gray-500" size={16} />
-                    </div>
-                  )}
-                  {parent.fullName || "No name"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {formatPhoneNumber(parent.phoneNumber)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {parent.role || "PARENT"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    className="text-[#5DB444] hover:text-green-700 font-medium"
-                    onClick={() => openModal(parent)}
-                  >
-                    Ko‘proq
-                  </button>
+
+      {/* Parentlar jadvali */}
+      <div className="max-h-[70vh] overflow-y-auto border shadow-lg rounded-xl">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Ota-ona
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Telefon raqam
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-6 py-3"></th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredParents.length > 0 ? (
+              filteredParents.map((parent, idx) => (
+                <tr
+                  key={parent.id || idx}
+                  className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black flex items-center gap-3">
+                    {parent.imageUrl ? (
+                      <img
+                        src={parent.imageUrl}
+                        alt="parent"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                        <FiUser className="text-gray-500" size={16} />
+                      </div>
+                    )}
+                    {parent.fullName || "No name"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {formatPhoneNumber(parent.phone)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {parent.role || "PARENT"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <button
+                      className="text-[#5DB444] hover:text-green-700 font-medium"
+                      onClick={() => openModal(parent)}
+                    >
+                      Ko‘proq
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="4"
+                  className="text-center px-6 py-4 text-sm text-gray-500"
+                >
+                  Ota-onalar topilmadi
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td
-                colSpan="4"
-                className="text-center px-6 py-4 text-sm text-gray-500"
-              >
-                Ota-onalar topilmadi
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Ko‘proq modal */}
       {modalOpen && selectedParent && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-xl w-96 relative shadow-2xl transform transition-transform duration-300 scale-100 hover:scale-105">
+          <div className="bg-white p-6 rounded-xl w-96 max-h-[80vh] overflow-y-auto relative shadow-2xl">
             <button
               onClick={closeModal}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
@@ -249,7 +253,7 @@ const Parents = () => {
               </p>
               <p>
                 <span className="font-semibold">Telefon:</span>{" "}
-                {formatPhoneNumber(selectedParent.phoneNumber)}
+                {formatPhoneNumber(selectedParent.phone)}
               </p>
               <p>
                 <span className="font-semibold">Role:</span>{" "}
@@ -259,9 +263,11 @@ const Parents = () => {
           </div>
         </div>
       )}
+
+      {/* Add Parent modal */}
       {addModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-2xl">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto relative shadow-2xl">
             <button
               onClick={() => setAddModal(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
@@ -273,33 +279,53 @@ const Parents = () => {
             </h2>
             {error && <p className="text-red-500 text-center mb-2">{error}</p>}
             <form className="flex flex-col gap-3" onSubmit={handleAddParent}>
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Ism"
-                value={form.fullName}
-                onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
-              <input
-                type="text"
-                name="phoneNumber"
-                placeholder="Telefon raqam"
-                value={form.phoneNumber}
-                onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
-              <input
-                type="password"
-                name="password"
-                placeholder="Parol"
-                value={form.password}
-                onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
+              <div className="flex flex-col">
+                <label htmlFor="fullName" className="text-gray-700 font-medium">
+                  Ism
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  name="fullName"
+                  placeholder="Ism"
+                  value={form.fullName}
+                  onChange={(e) => handleFormChange("fullName", e.target.value)}
+                  className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="phone" className="text-gray-700 font-medium">
+                  Telefon raqam
+                </label>
+                <PhoneInput
+                  country={"uz"}
+                  value={form.phone}
+                  onChange={(value) => handleFormChange("phone", value)}
+                  inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  masks={{ uz: "..-...-..-.." }}
+                  placeholder="Telefon raqam"
+                  id="phone"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="password" className="text-gray-700 font-medium">
+                  Parol
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  name="password"
+                  placeholder="Parol"
+                  value={form.password}
+                  onChange={(e) => handleFormChange("password", e.target.value)}
+                  className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+
               <button
                 type="submit"
                 className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
