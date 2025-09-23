@@ -4,7 +4,6 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useState } from "react";
 
-// O'quvchilarni olish
 const fetchStudents = async ({ queryKey }) => {
   const [, token, groupId] = queryKey;
   if (!token || !groupId) throw new Error("Token yoki groupId topilmadi");
@@ -21,7 +20,6 @@ const fetchStudents = async ({ queryKey }) => {
   }));
 };
 
-// Baho qo'yish
 const postGrade = async ({ studentId, scores, token }) => {
   return axios.post(
     "http://167.86.121.42:8080/mark",
@@ -47,27 +45,23 @@ const GradePage = () => {
     navigate("/login");
   }
 
-  // O'quvchilar ro'yxati
   const { data: students = [], isLoading, isError, error } = useQuery({
     queryKey: ["students", token, groupId],
     queryFn: fetchStudents,
     retry: false,
     staleTime: 1000 * 60 * 5,
-    onSuccess: () => {}, // Toast chiqmasin
+    onSuccess: () => {},
     onError: () => toast.error("O‘quvchilarni yuklashda xatolik"),
   });
 
-  // Baholash mutation
   const { mutate, isLoading: isPosting } = useMutation({
     mutationFn: ({ studentId, scores }) => postGrade({ studentId, scores, token }),
     onSuccess: (_, { studentId }) => {
-      toast.success("Baho saqlandi ✅");
+      toast.success("Baho saqlandi ");
 
-      // O'quvchilar ro'yxatini va top-students ni yangilash
       queryClient.invalidateQueries(["students", token, groupId]);
       queryClient.invalidateQueries(["top-students", token]);
 
-      // Local score reset
       setLocalScores((prev) => ({
         ...prev,
         [studentId]: { homeworkScore: "", activityScore: "", attendanceScore: "" },
@@ -96,18 +90,23 @@ const GradePage = () => {
   if (isError) {
     return (
       <div className="flex justify-center items-center h-screen text-red-500">
-        Xato: {error.message}
+        Iltimos kutib turing!
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="mb-7 lg:text-4xl md:text-3xl sm:text-2xl font-bold text-green-400 text-center">
-          Guruhdagi O‘quvchilar
-        </h1>
+  <div className="min-w-full bg-gray-50 p-4 sm:p-6">
+    <div className="max-w-7xl mx-auto">
+      <h1 className="mb-7 lg:text-4xl md:text-3xl sm:text-2xl font-bold text-green-400 text-center">
+        Guruhdagi O‘quvchilar
+      </h1>
 
+      {students.length === 0 ? (
+        <div className="flex justify-center items-center">
+          <p className="text-gray-500 text-lg">Hali o‘quvchilar mavjud emas</p>
+        </div>
+      ) : (
         <div className="overflow-x-auto bg-white rounded-lg shadow">
           <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
             <thead className="bg-green-500">
@@ -135,7 +134,8 @@ const GradePage = () => {
                   .map(Number)
                   .filter((n) => !isNaN(n));
 
-                const avgScore = avg.length > 0 ? (avg.reduce((a, b) => a + b, 0) / avg.length).toFixed(2) : "-";
+                const avgScore =
+                  avg.length > 0 ? (avg.reduce((a, b) => a + b, 0) / avg.length).toFixed(2) : "-";
 
                 const badgeColor =
                   avgScore === "-"
@@ -166,9 +166,17 @@ const GradePage = () => {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => mutate({ studentId: student.id, scores })}
-                        disabled={isPosting || !scores.homeworkScore || !scores.activityScore || !scores.attendanceScore}
+                        disabled={
+                          isPosting ||
+                          !scores.homeworkScore ||
+                          !scores.activityScore ||
+                          !scores.attendanceScore
+                        }
                         className={`px-3 py-1 rounded-md text-white font-medium ${
-                          isPosting || !scores.homeworkScore || !scores.activityScore || !scores.attendanceScore
+                          isPosting ||
+                          !scores.homeworkScore ||
+                          !scores.activityScore ||
+                          !scores.attendanceScore
                             ? "bg-gray-300 cursor-not-allowed"
                             : "bg-blue-500 hover:bg-blue-600"
                         }`}
@@ -178,7 +186,9 @@ const GradePage = () => {
                     </td>
 
                     <td className="px-6 py-4 text-center hidden sm:table-cell">
-                      <span className={`px-2 py-1 rounded-full text-white text-sm font-medium ${badgeColor}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-white text-sm font-medium ${badgeColor}`}
+                      >
                         {avgScore}
                       </span>
                     </td>
@@ -188,9 +198,10 @@ const GradePage = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default GradePage;

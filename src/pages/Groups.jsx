@@ -1,17 +1,27 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useState } from "react";
 
 const getTeacherDashboard = async (token) => {
-  const { data } = await axios.get("http://167.86.121.42:8080/user/teacher-dashboard", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const { data } = await axios.get(
+    "http://167.86.121.42:8080/user/teacher-dashboard",
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return data?.data;
 };
 
-const getTeacherGroups = async (token) => {
-  const { data } = await axios.get("http://167.86.121.42:8080/group?page=0&size=10", {
+const getTeacherGroups = async ({ queryKey }) => {
+  const [_key, token, searchQuery] = queryKey;
+  const { data } = await axios.get("http://167.86.121.42:8080/group", {
     headers: { Authorization: `Bearer ${token}` },
+    params: {
+      page: 0,
+      size: 10,
+      ...(searchQuery ? { name: searchQuery.toLowerCase() } : {}),
+    },
   });
   return data?.data?.body || [];
 };
@@ -23,6 +33,9 @@ const TeacherGroups = () => {
   if (!token) {
     navigate("/login");
   }
+
+  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {
     data: dashboard,
@@ -41,8 +54,8 @@ const TeacherGroups = () => {
     isLoading: groupsLoading,
     error: groupsError,
   } = useQuery({
-    queryKey: ["teacher-groups", token],
-    queryFn: () => getTeacherGroups(token),
+    queryKey: ["teacher-groups", token, searchQuery],
+    queryFn: getTeacherGroups,
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 10,
     enabled: !!token,
@@ -51,6 +64,11 @@ const TeacherGroups = () => {
   const handleGoToGrade = (groupId) => {
     navigate(`/teacher-dashboard/grade/${groupId}`);
     localStorage.setItem("groupId", groupId);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSearchQuery(search.trim());
   };
 
   if (dashboardLoading || groupsLoading) {
@@ -71,16 +89,6 @@ const TeacherGroups = () => {
     );
   }
 
-  if (!groups || groups.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-[50vh]">
-        <h1 className="text-2xl font-bold text-gray-600">
-          Hozircha guruhlaringiz yo‘q!
-        </h1>
-      </div>
-    );
-  }
-
   return (
     <div className="mt-[3rem]">
       <div className="max-w-[1300px] mx-auto px-4">
@@ -88,36 +96,63 @@ const TeacherGroups = () => {
           Salom, {groups[0]?.teacherName}
         </h1>
 
-        <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500 mt-[2rem] mb-[1.5rem]">
-          Sizning guruhlaringiz:
-        </h1>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {groups.map((group) => (
-            <div
-              key={group.id}
-              className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-500"
+        <div className="flex flex-col md:flex-row justify-between items-center mb-[3rem] mt-[2rem] gap-4">
+          <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500">
+            Sizning guruhlaringiz:
+          </h1>
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="p-[1rem] outline-none w-full md:w-[20rem] rounded-[7px] shadow-sm"
+              placeholder="Guruh nomi bo‘yicha qidiring..."
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition"
             >
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                {group.name}
-              </h2>
-              <p className="text-gray-700 mb-2 text-lg">
-                O‘qituvchi:{" "}
-                <span className="font-medium">{group.teacherName}</span>
-              </p>
-              <p className="text-gray-700 mb-3 text-lg">
-                O‘quvchilar:{" "}
-                <span className="font-medium">{group.studentCount}</span>
-              </p>
-              <button
-                onClick={() => handleGoToGrade(group.id)}
-                className="w-full py-2 rounded-lg text-white font-semibold bg-green-500 hover:bg-green-600 transition"
-              >
-                Baholashga o‘tish
-              </button>
-            </div>
-          ))}
+              Qidirish
+            </button>
+          </form>
         </div>
+
+        {!groups || groups.length === 0 ? (
+          <div className="flex justify-center items-center h-[50vh]">
+            <h1 className="text-2xl font-bold text-gray-600">
+              {searchQuery
+                ? "Bunday guruh topilmadi!"
+                : "Hozircha guruhlaringiz yo‘q!"}
+            </h1>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {groups.map((group) => (
+              <div
+                key={group.id}
+                className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-500"
+              >
+                <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                  {group.name}
+                </h2>
+                <p className="text-gray-700 mb-2 text-lg">
+                  O‘qituvchi:{" "}
+                  <span className="font-medium">{group.teacherName}</span>
+                </p>
+                <p className="text-gray-700 mb-3 text-lg">
+                  O‘quvchilar:{" "}
+                  <span className="font-medium">{group.studentCount}</span>
+                </p>
+                <button
+                  onClick={() => handleGoToGrade(group.id)}
+                  className="w-full py-2 rounded-lg text-white font-semibold bg-green-500 hover:bg-green-600 transition"
+                >
+                  Baholashga o‘tish
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
