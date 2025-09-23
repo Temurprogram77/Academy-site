@@ -13,7 +13,7 @@ const AddStudent = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [imgUrl, setImgUrl] = useState(""); 
   const [groupId, setGroupId] = useState(""); 
-  const [groups, setGroups] = useState([]); // 📌 Guruhlar
+  const [groups, setGroups] = useState([]);
   const [parentPhone, setParentPhone] = useState("");
   const [loading, setLoading] = useState(false);
 

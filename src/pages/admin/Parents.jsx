@@ -152,7 +152,7 @@ const Parents = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     className="text-[#5DB444] hover:text-green-700 font-medium"
-                    onClick={() => navigate("/teacher-page")}
+                    onClick={() => navigate(`/admin-dashboard/parent-page/${parent.id}`)}
                   >
                     Ko‘proq
                   </button>
