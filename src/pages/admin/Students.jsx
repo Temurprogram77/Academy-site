@@ -297,8 +297,14 @@ const Students = () => {
                 country="uz"
                 value={form.phone}
                 onChange={(value) => handleFormChange("phone", value)}
-                inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                inputClass="w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Telefon raqam"
+                inputStyle={{
+                  width: "100%",
+                  borderRadius: "0.375rem",
+                  padding: "16px 12px",
+                  border: "1px solid #E5E7EB",
+                }}
               />
 
               <label className="text-sm font-medium text-gray-700">
@@ -310,6 +316,12 @@ const Students = () => {
                 onChange={(value) => handleFormChange("parentPhone", value)}
                 inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Parent telefon"
+                inputStyle={{
+                  width: "100%",
+                  borderRadius: "0.375rem",
+                  padding: "16px 12px",
+                  border: "1px solid #E5E7EB",
+                }}
               />
 
               <label className="text-sm font-medium text-gray-700">
@@ -333,7 +345,7 @@ const Students = () => {
                 required
               />
 
-              <label className="text-sm font-medium text-gray-700">Guruh</label>
+              <label className="text-sm font-medium text-transparent">Guruh</label>
               <select
                 value={form.groupId}
                 onChange={(e) => handleFormChange("groupId", e.target.value)}

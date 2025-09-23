@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiUser, FiX } from "react-icons/fi";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
-// Telefon formatlash funksiyasi (faqat ko‘rinish uchun)
+// Telefon formatlash (ko‘rinish uchun)
 const formatPhoneNumber = (phone) => {
   if (!phone) return "Noma'lum";
   const cleaned = phone.replace(/\D/g, "");
@@ -28,6 +29,8 @@ const Parents = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedParent, setSelectedParent] = useState(null);
   const [addModal, setAddModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -59,7 +62,7 @@ const Parents = () => {
       })
       .catch((err) => {
         console.error(err);
-        setError("Malumotlarni yuklashda xatolik yuz berdi!");
+        setError("Ma’lumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
   }, [token]);
@@ -99,7 +102,7 @@ const Parents = () => {
     try {
       const payload = {
         fullName: form.fullName.trim(),
-        phone: form.phone.replace(/\D/g, ""), // APIga yuborish uchun faqat raqam
+        phoneNumber: form.phone.replace(/\D/g, ""), // APIga yuboriladigan format (998...)
         password: form.password.trim(),
       };
 
@@ -220,50 +223,6 @@ const Parents = () => {
         </table>
       </div>
 
-      {/* Ko‘proq modal */}
-      {modalOpen && selectedParent && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-xl w-96 max-h-[80vh] overflow-y-auto relative shadow-2xl">
-            <button
-              onClick={closeModal}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-            >
-              <FiX size={24} />
-            </button>
-            <div className="flex items-center gap-4 mb-4 border-b pb-2">
-              {selectedParent.imageUrl ? (
-                <img
-                  src={selectedParent.imageUrl}
-                  alt="parent"
-                  className="w-14 h-14 rounded-full object-cover border-2 border-green-500"
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center border-2 border-green-500">
-                  <FiUser className="text-gray-500" size={20} />
-                </div>
-              )}
-              <h2 className="text-2xl font-bold text-green-600">
-                Ota-ona ma’lumotlari
-              </h2>
-            </div>
-            <div className="space-y-3 text-gray-700">
-              <p>
-                <span className="font-semibold">Ism:</span>{" "}
-                {selectedParent.fullName}
-              </p>
-              <p>
-                <span className="font-semibold">Telefon:</span>{" "}
-                {formatPhoneNumber(selectedParent.phone)}
-              </p>
-              <p>
-                <span className="font-semibold">Role:</span>{" "}
-                {selectedParent.role}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Add Parent modal */}
       {addModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -301,29 +260,47 @@ const Parents = () => {
                 </label>
                 <PhoneInput
                   country={"uz"}
+                  onlyCountries={["uz"]}
                   value={form.phone}
                   onChange={(value) => handleFormChange("phone", value)}
                   inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   masks={{ uz: "..-...-..-.." }}
-                  placeholder="Telefon raqam"
+                  placeholder="+998 90-999-99-99"
                   id="phone"
+                  inputStyle={{
+                    width: "100%",
+                    borderRadius: "0.375rem",
+                    padding: "10px 12px",
+                    border: "1px solid #d1d5db",
+                  }}
                 />
               </div>
 
-              <div className="flex flex-col">
+              <div className="flex flex-col relative">
                 <label htmlFor="password" className="text-gray-700 font-medium">
                   Parol
                 </label>
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Parol"
                   value={form.password}
                   onChange={(e) => handleFormChange("password", e.target.value)}
-                  className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-9 text-gray-500"
+                >
+                  {showPassword ? (
+                    <EyeOffIcon size={18} />
+                  ) : (
+                    <EyeIcon size={18} />
+                  )}
+                </button>
               </div>
 
               <button

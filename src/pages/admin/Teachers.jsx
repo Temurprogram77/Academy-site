@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiUser, FiX } from "react-icons/fi";
+import { EyeIcon, EyeOffIcon } from "lucide-react"; // 👁 parol uchun
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
-// Telefon raqam formatlash funksiyasi
+// Telefon raqam formatlash (jadval uchun)
 const formatPhoneNumber = (phone) => {
   if (!phone) return "Noma'lum";
   const cleaned = phone.replace(/\D/g, "");
@@ -19,9 +22,18 @@ const Teachers = () => {
   const [filteredTeachers, setFilteredTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [addModal, setAddModal] = useState(false);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+
+  // 🔥 yangi teacher uchun form state
+  const [form, setForm] = useState({
+    fullName: "",
+    phoneNumber: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -48,7 +60,7 @@ const Teachers = () => {
       })
       .catch((err) => {
         console.error("Teachers error:", err);
-        setError("Kechirasiz, malumotlarni yuklashda xatolik yuz berdi!");
+        setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
   }, [token]);
@@ -62,9 +74,9 @@ const Teachers = () => {
     setFilteredTeachers(filtered);
   }, [search, teachers]);
 
-  // Modalni ochish faqat kerakli 3 maydon bo‘lsa
+  // Modalni ochish
   const openModal = (teacher) => {
-    if (teacher.fullName && teacher.phone && teacher.role) {
+    if (teacher.fullName && teacher.phoneNumber && teacher.role) {
       setSelectedTeacher(teacher);
       setModalOpen(true);
     } else {
@@ -75,6 +87,35 @@ const Teachers = () => {
   const closeModal = () => {
     setSelectedTeacher(null);
     setModalOpen(false);
+  };
+
+  // ✅ Teacher qo‘shish
+  const handleAddTeacher = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        fullName: form.fullName,
+        // API ga faqat 998 bilan
+        phoneNumber: form.phoneNumber.startsWith("998")
+          ? form.phoneNumber
+          : `998${form.phoneNumber}`,
+        password: form.password,
+      };
+
+      await api.post("/auth/saveUser?role=TEACHER", payload);
+
+      alert("✅ O‘qituvchi qo‘shildi!");
+      setAddModal(false);
+      setForm({ fullName: "", phoneNumber: "", password: "" });
+
+      // Ro‘yxatni yangilash
+      const res = await api.get("/user/search?role=TEACHER&page=0&size=50");
+      setTeachers(res.data?.data?.body ?? []);
+      setFilteredTeachers(res.data?.data?.body ?? []);
+    } catch (err) {
+      console.error("Add teacher error:", err.response?.data || err.message);
+      alert("❌ O‘qituvchi qo‘shishda xatolik!");
+    }
   };
 
   if (loading)
@@ -95,7 +136,10 @@ const Teachers = () => {
     <div className="px-6">
       {/* Add Teacher va Search */}
       <div className="flex items-center justify-between mt-6 mb-4">
-        <button className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+        <button
+          onClick={() => setAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        >
           <TiPlusOutline size={20} />
           <span>Add New Teacher</span>
         </button>
@@ -151,7 +195,7 @@ const Teachers = () => {
                 </td>
 
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {formatPhoneNumber(teacher.phone)}
+                  {formatPhoneNumber(teacher.phoneNumber)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {teacher.role || "TEACHER"}
@@ -179,11 +223,90 @@ const Teachers = () => {
         </tbody>
       </table>
 
-      {/* Modal */}
+      {/* Add Teacher Modal */}
+      {addModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-2xl">
+            <button
+              onClick={() => setAddModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={24} />
+            </button>
+            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
+              Yangi o‘qituvchi qo‘shish
+            </h2>
+            <form className="flex flex-col gap-3" onSubmit={handleAddTeacher}>
+              <input
+                type="text"
+                name="fullName"
+                placeholder="Ism Familiya"
+                value={form.fullName}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, fullName: e.target.value }))
+                }
+                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+
+              {/* Telefon input */}
+              <PhoneInput
+                country={"uz"}
+                onlyCountries={["uz"]}
+                masks={{ uz: "(..) ...-..-.." }}
+                value={form.phoneNumber}
+                onChange={(phone) =>
+                  setForm((prev) => ({ ...prev, phoneNumber: phone }))
+                }
+                inputStyle={{
+                  width: "100%",
+                  borderRadius: "0.375rem",
+                  padding: "10px 12px",
+                  border: "1px solid #d1d5db",
+                }}
+              />
+
+              {/* Parol input */}
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Parol"
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                  className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 w-full"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-2.5 text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOffIcon size={20} />
+                  ) : (
+                    <EyeIcon size={20} />
+                  )}
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
+              >
+                Qo‘shish
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Info Modal */}
       {modalOpen && selectedTeacher && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-xl w-96 relative shadow-2xl transform transition-transform duration-300 scale-100 hover:scale-105">
-            {/* Yopish tugmasi */}
+          <div className="bg-white p-6 rounded-xl w-96 relative shadow-2xl">
             <button
               onClick={closeModal}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
@@ -191,7 +314,6 @@ const Teachers = () => {
               <FiX size={24} />
             </button>
 
-            {/* Modal Header */}
             <div className="flex items-center gap-4 mb-4 border-b pb-2">
               {selectedTeacher.imageUrl ? (
                 <img
@@ -209,7 +331,6 @@ const Teachers = () => {
               </h2>
             </div>
 
-            {/* Modal Body */}
             <div className="space-y-3 text-gray-700">
               <p>
                 <span className="font-semibold">Ism:</span>{" "}
@@ -217,7 +338,7 @@ const Teachers = () => {
               </p>
               <p>
                 <span className="font-semibold">Telefon:</span>{" "}
-                {formatPhoneNumber(selectedTeacher.phone)}
+                {formatPhoneNumber(selectedTeacher.phoneNumber)}
               </p>
               <p>
                 <span className="font-semibold">Role:</span>{" "}

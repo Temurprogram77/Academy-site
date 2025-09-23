@@ -19,7 +19,6 @@ const api = axios.create({
 
 const Teams = () => {
   const [teams, setTeams] = useState([]);
-  const [filteredTeams, setFilteredTeams] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,31 +37,50 @@ const Teams = () => {
 
   const token = localStorage.getItem("token");
 
-  // Guruh va xonalarni olish
-  const fetchTeams = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [groupsRes, roomsRes] = await Promise.all([
-        api.get("/group?page=0&size=50", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        api.get("/room", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
+  // Guruh va xonalarni olish (asosiy fetch)
+  const fetchTeams = useCallback(
+    async (query = "") => {
+      try {
+        setLoading(true);
 
-      const groupsArr = groupsRes?.data?.data?.body ?? [];
-      const roomsArr = roomsRes?.data?.data ?? [];
-      setTeams(groupsArr);
-      setFilteredTeams(groupsArr);
-      setRooms(roomsArr);
-    } catch (err) {
-      console.error(err);
-      setError("❌ Ma’lumotlarni yuklashda xatolik!");
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+        const [groupsRes, roomsRes] = await Promise.all([
+          api.get(`/group?name=${query}&page=0&size=50`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          api.get("/room", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const groupsArr = groupsRes?.data?.data?.body ?? [];
+        const roomsArr = roomsRes?.data?.data ?? [];
+
+        // Har bir group uchun to‘liq ma’lumot olish
+        const detailedGroups = await Promise.all(
+          groupsArr.map(async (g) => {
+            try {
+              const res = await api.get(`/group/${g.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              return res.data?.data || g;
+            } catch (err) {
+              console.error(`Guruh ${g.id} ma’lumotini olishda xatolik:`, err);
+              return g;
+            }
+          })
+        );
+
+        setTeams(detailedGroups);
+        setRooms(roomsArr);
+      } catch (err) {
+        console.error(err);
+        setError("❌ Ma’lumotlarni yuklashda xatolik!");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token]
+  );
 
   useEffect(() => {
     if (!token) {
@@ -73,15 +91,13 @@ const Teams = () => {
     fetchTeams();
   }, [token, fetchTeams]);
 
-  // Qidiruv
+  // Search API orqali qidirish
   useEffect(() => {
-    const normalizedSearch = search.toLowerCase().trim();
-    setFilteredTeams(
-      teams.filter((team) =>
-        (team.name || "").toLowerCase().includes(normalizedSearch)
-      )
-    );
-  }, [search, teams]);
+    const delayDebounce = setTimeout(() => {
+      fetchTeams(search.trim());
+    }, 500); // 0.5s kechikish
+    return () => clearTimeout(delayDebounce);
+  }, [search, fetchTeams]);
 
   const openTeamModal = async (team) => {
     try {
@@ -181,12 +197,24 @@ const Teams = () => {
             <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
               O‘quvchilar soni
             </th>
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+              Xona
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+              Dars vaqti
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+              Kunlari
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+              Ustoz ID
+            </th>
             <th className="px-6 py-3"></th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {filteredTeams.length > 0 ? (
-            filteredTeams.map((team, idx) => (
+          {teams.length > 0 ? (
+            teams.map((team, idx) => (
               <tr
                 key={team.id || idx}
                 className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
@@ -196,6 +224,18 @@ const Teams = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {team.studentCount ?? 0}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {team.roomName || "-"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {team.startTime} - {team.endTime}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {team.weekDays?.join(", ") || "-"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {team.teacherId || "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
@@ -210,7 +250,7 @@ const Teams = () => {
           ) : (
             <tr>
               <td
-                colSpan="3"
+                colSpan="7"
                 className="text-center px-6 py-4 text-sm text-gray-500"
               >
                 Hech qanday guruh topilmadi
@@ -294,7 +334,6 @@ const Teams = () => {
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
-
               {/* Weekdays */}
               <div className="flex flex-wrap gap-2">
                 {weekOptions.map((day) => (
@@ -309,7 +348,6 @@ const Teams = () => {
                   </label>
                 ))}
               </div>
-
               {/* TeacherId */}
               <input
                 type="number"
@@ -320,13 +358,12 @@ const Teams = () => {
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
-
               {/* Room select */}
               <select
                 name="roomId"
                 value={form.roomId}
                 onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="border px-4 py-2 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               >
                 <option value="">Xona tanlang</option>
@@ -336,7 +373,6 @@ const Teams = () => {
                   </option>
                 ))}
               </select>
-
               <button
                 type="submit"
                 className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 shadow-md"
