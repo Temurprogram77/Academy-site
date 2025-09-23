@@ -2,41 +2,33 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-const fetchTopStudents = async (token, groupId) => {
+const fetchTopStudents = async (token) => {
   const { data } = await axios.get(
-    `http://167.86.121.42:8080/user/topStudentsForTeacher?groupId=${groupId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
+    `http://167.86.121.42:8080/user/topStudentsForTeacher`,
+    { headers: { Authorization: `Bearer ${token}` } }
   );
+
   if (data?.success) {
-    return (data.data || [])
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+    return (data.data || []).sort((a, b) => b.score - a.score);
   }
+
   return [];
 };
 
 const TopStudent = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const groupId = localStorage.getItem("groupId");
 
   if (!token) {
     navigate("/login");
   }
 
-  const {
-    data: students = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["top-students", token, groupId], // 🔑 token va groupId qo‘shildi
-    queryFn: () => fetchTopStudents(token, groupId),
+  const { data: students = [], isLoading, isError, error } = useQuery({
+    queryKey: ["top-students", token],
+    queryFn: () => fetchTopStudents(token),
     retry: false,
     staleTime: 1000 * 60 * 5,
-    enabled: !!token && !!groupId, // 🔑 token va groupId bo‘lsa query ishlaydi
+    enabled: !!token,
     onError: (err) => {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
@@ -102,41 +94,24 @@ const TopStudent = () => {
               <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Score</th>
             </tr>
           </thead>
+
           <tbody className="bg-white divide-y divide-gray-200">
             {students.length > 0 ? (
               students.map((student, idx) => (
-                <tr
-                  key={student.id || idx}
-                  className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
+                <tr key={student.id || idx} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                   <td className="px-3 sm:px-6 py-4 font-bold">{idx + 1}</td>
-                  <td className="px-3 sm:px-6 py-4 font-semibold">
-                    {student.name || "No name"}
-                  </td>
-                  <td className="px-3 sm:px-6 py-4">
-                    {formatPhoneNumber(student.phoneNumber)}
-                  </td>
-                  <td className="px-3 sm:px-6 py-4">
-                    {student.parentName || "Ota/ona"}
-                  </td>
-                  <td
-                    className={`px-3 sm:px-6 py-2 rounded text-center font-semibold ${getLevelColor(
-                      student.level
-                    )}`}
-                  >
+                  <td className="px-3 sm:px-6 py-4 font-semibold">{student.name || "No name"}</td>
+                  <td className="px-3 sm:px-6 py-4">{formatPhoneNumber(student.phoneNumber)}</td>
+                  <td className="px-3 sm:px-6 py-4">{student.parentName || "Ota/ona"}</td>
+                  <td className={`px-3 sm:px-6 py-2 text-center font-semibold ${getLevelColor(student.level)}`}>
                     {student.level || "Level"}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 font-bold text-green-600">
-                    {student.score ?? 0}
-                  </td>
+                  <td className="px-3 sm:px-6 py-4 font-bold text-green-600">{student.score ?? 0}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td
-                  colSpan="6"
-                  className="text-center px-3 sm:px-6 py-4 text-gray-500"
-                >
+                <td colSpan="6" className="text-center px-3 sm:px-6 py-4 text-gray-500">
                   Kechirasiz, top studentlar topilmadi!
                 </td>
               </tr>

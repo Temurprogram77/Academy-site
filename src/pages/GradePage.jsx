@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useState } from "react";
 
+// O'quvchilarni olish
 const fetchStudents = async ({ queryKey }) => {
   const [, token, groupId] = queryKey;
   if (!token || !groupId) throw new Error("Token yoki groupId topilmadi");
@@ -20,6 +21,7 @@ const fetchStudents = async ({ queryKey }) => {
   }));
 };
 
+// Baho qo'yish
 const postGrade = async ({ studentId, scores, token }) => {
   return axios.post(
     "http://167.86.121.42:8080/mark",
@@ -45,32 +47,33 @@ const GradePage = () => {
     navigate("/login");
   }
 
-  const {
-    data: students = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  // O'quvchilar ro'yxati
+  const { data: students = [], isLoading, isError, error } = useQuery({
     queryKey: ["students", token, groupId],
     queryFn: fetchStudents,
     retry: false,
     staleTime: 1000 * 60 * 5,
-    onSuccess: () => toast.success("O‘quvchilar ro‘yxati yuklandi ✅"),
-    onError: () => toast.error("O‘quvchilarni yuklashda xatolik "),
+    onSuccess: () => {}, // Toast chiqmasin
+    onError: () => toast.error("O‘quvchilarni yuklashda xatolik"),
   });
 
+  // Baholash mutation
   const { mutate, isLoading: isPosting } = useMutation({
     mutationFn: ({ studentId, scores }) => postGrade({ studentId, scores, token }),
     onSuccess: (_, { studentId }) => {
       toast.success("Baho saqlandi ✅");
+
+      // O'quvchilar ro'yxatini va top-students ni yangilash
       queryClient.invalidateQueries(["students", token, groupId]);
-      queryClient.invalidateQueries(["top-students", token, groupId]);
+      queryClient.invalidateQueries(["top-students", token]);
+
+      // Local score reset
       setLocalScores((prev) => ({
         ...prev,
         [studentId]: { homeworkScore: "", activityScore: "", attendanceScore: "" },
       }));
     },
-    onError: () => toast.error("Baho qo‘yishda muammo "),
+    onError: () => toast.error("Baho qo‘yishda muammo"),
   });
 
   const handleChange = (studentId, field, value) => {
@@ -132,8 +135,7 @@ const GradePage = () => {
                   .map(Number)
                   .filter((n) => !isNaN(n));
 
-                const avgScore =
-                  avg.length > 0 ? (avg.reduce((a, b) => a + b, 0) / avg.length).toFixed(2) : "-";
+                const avgScore = avg.length > 0 ? (avg.reduce((a, b) => a + b, 0) / avg.length).toFixed(2) : "-";
 
                 const badgeColor =
                   avgScore === "-"
@@ -164,17 +166,9 @@ const GradePage = () => {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => mutate({ studentId: student.id, scores })}
-                        disabled={
-                          isPosting ||
-                          !scores.homeworkScore ||
-                          !scores.activityScore ||
-                          !scores.attendanceScore
-                        }
+                        disabled={isPosting || !scores.homeworkScore || !scores.activityScore || !scores.attendanceScore}
                         className={`px-3 py-1 rounded-md text-white font-medium ${
-                          isPosting ||
-                          !scores.homeworkScore ||
-                          !scores.activityScore ||
-                          !scores.attendanceScore
+                          isPosting || !scores.homeworkScore || !scores.activityScore || !scores.attendanceScore
                             ? "bg-gray-300 cursor-not-allowed"
                             : "bg-blue-500 hover:bg-blue-600"
                         }`}
@@ -184,9 +178,7 @@ const GradePage = () => {
                     </td>
 
                     <td className="px-6 py-4 text-center hidden sm:table-cell">
-                      <span
-                        className={`px-2 py-1 rounded-full text-white text-sm font-medium ${badgeColor}`}
-                      >
+                      <span className={`px-2 py-1 rounded-full text-white text-sm font-medium ${badgeColor}`}>
                         {avgScore}
                       </span>
                     </td>

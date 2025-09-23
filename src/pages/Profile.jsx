@@ -79,7 +79,7 @@ const TeacherProfile = () => {
       setFormData((prev) => ({ ...prev, imageUrl: uploadedUrl }));
       toast.success("Rasm muvaffaqiyatli yuklandi!");
     } catch {
-      toast.error("Rasm yuklashda xatolik");
+      toast.error("Rasm 1MB dan oshmasin!");
     }
   };
 

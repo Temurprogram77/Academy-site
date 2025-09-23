@@ -51,13 +51,7 @@ const MarksPage = () => {
     navigate("/login", { replace: true });
   }
 
-  // 🔹 Ma’lumot olish
-  const {
-    data: marks = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const { data: marks = [], isLoading, isError, error } = useQuery({
     queryKey: ["marks", token],
     queryFn: () => fetchMarks(token),
     retry: false,
@@ -70,22 +64,26 @@ const MarksPage = () => {
       }
     },
   });
+
   const deleteMutation = useMutation({
     mutationFn: ({ id, token }) => deleteMark({ id, token }),
     onSuccess: () => {
       queryClient.invalidateQueries(["marks", token]);
       toast.success("Baho muvaffaqiyatli o‘chirildi!");
+      setShowDeleteModal(false);
     },
     onError: () => {
       toast.error("Baho o‘chirilmadi!");
     },
   });
+
   const editMutation = useMutation({
     mutationFn: ({ mark, formData, token }) =>
       editMark({ mark, formData, token }),
     onSuccess: () => {
       queryClient.invalidateQueries(["marks", token]);
       toast.success("Baho muvaffaqiyatli yangilandi!");
+      setShowEditModal(false);
     },
     onError: () => {
       toast.error("Baho yangilanmadi!");
