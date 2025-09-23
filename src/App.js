@@ -22,11 +22,8 @@ import { Toaster } from "sonner";
 import UserDetail from "./pages/UserDetail";
 import ScoreHistory from "./pages/ScoreHistory";
 import Groups from "./pages/Groups";
-import StudentPage from "./pages/admin/studentsPage";
-import TeacherPage from "./pages/admin/TeaacherPage";
 import AddTeacher from "./pages/admin/AddTeacher";
 import AddParent from "./pages/admin/AddParent";
-import AddStudent from "./pages/admin/addStudent";
 import AddRoom from "./pages/admin/AddRoom";
 import AddTeam from "./pages/admin/addTeam";
 
@@ -47,15 +44,11 @@ const App = () => {
           <Route path="/user-dashboard" element={<User />} />
           <Route path="/:id" element={<UserDetail />} />
           <Route path="/ScoreHistory/:id" element={<ScoreHistory />} />
-
           <Route path="/admin-dashboard" element={<AdminPanel />}>
             <Route index element={<Dashboard />} />
             <Route path="teachers" element={<Teachers />} />
-            <Route path="teacher-page" element={<TeacherPage />} />
             <Route path="parents" element={<Parents />} />
             <Route path="students" element={<Students />} />
-            <Route path="student/:id" element={<StudentPage />} />
-            <Route path="student/add" element={<AddStudent />} />
             <Route path="rooms" element={<Rooms />} />
             <Route path="team/add" element={<AddTeam />} />
             <Route path="teams" element={<Teams />} />
@@ -72,6 +65,20 @@ const App = () => {
             <Route path="profile" element={<Profile />} />
             <Route path="gradies" element={<Gradies />} />
             <Route path="groups" element={<Groups />} />
+          </Route>
+          <Route path="/admin-dashboard" element={<AdminPanel />}>
+            <Route index element={<Dashboard />} />
+            <Route path="teachers" element={<Teachers />} />
+            <Route path="parents" element={<Parents />} />
+            <Route path="students" element={<Students />} />
+            <Route path="rooms" element={<Rooms />} />
+            <Route path="team/add" element={<AddTeam />} />
+            <Route path="teams" element={<Teams />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="teacher/add" element={<AddTeacher />} />
+            <Route path="parent/add" element={<AddParent />} />
+            <Route path="parent/:id" element={<AddParent />} />
+            <Route path="add-room" element={<AddRoom />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
