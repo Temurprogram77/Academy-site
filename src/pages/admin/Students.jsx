@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiX } from "react-icons/fi";
+import { Eye, EyeOff } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -34,6 +35,7 @@ const Students = () => {
     groupId: "",
   });
   const [groups, setGroups] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
   const token = localStorage.getItem("token");
 
   const api = axios.create({
@@ -100,11 +102,11 @@ const Students = () => {
     try {
       const payload = {
         fullName: form.fullName,
-        phone: form.phone.replace(/\D/g, ""),
+        phone: form.phone.replace(/\D/g, ""), // API ga faqat 998...
         password: form.password,
         parentPhone: form.parentPhone.replace(/\D/g, ""),
         imgUrl: form.imgUrl || "",
-        groupId: form.groupId ? Number(form.groupId) : null, // integer kerak
+        groupId: form.groupId ? Number(form.groupId) : null,
       };
 
       await axios.post("http://167.86.121.42:8080/auth/saveStudent", payload, {
@@ -227,6 +229,7 @@ const Students = () => {
         </table>
       </div>
 
+      {/* Student modal */}
       {modalOpen && selectedStudent && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-xl w-96 max-h-[80vh] overflow-y-auto relative shadow-2xl">
@@ -266,6 +269,7 @@ const Students = () => {
         </div>
       )}
 
+      {/* Add Student modal */}
       {addModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto relative shadow-2xl">
@@ -336,16 +340,27 @@ const Students = () => {
               />
 
               <label className="text-sm font-medium text-gray-700">Parol</label>
-              <input
-                type="password"
-                placeholder="Parol"
-                value={form.password}
-                onChange={(e) => handleFormChange("password", e.target.value)}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Parol"
+                  value={form.password}
+                  onChange={(e) => handleFormChange("password", e.target.value)}
+                  className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 w-full pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
 
-              <label className="text-sm font-medium text-transparent">Guruh</label>
+              <label className="text-sm font-medium text-transparent">
+                Guruh
+              </label>
               <select
                 value={form.groupId}
                 onChange={(e) => handleFormChange("groupId", e.target.value)}
