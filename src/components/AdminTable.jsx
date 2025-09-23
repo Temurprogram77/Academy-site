@@ -50,7 +50,7 @@ const AdminTable = () => {
       .get("/user/search?role=TEACHER&page=0&size=10")
       .then((res) => setTeachers(res?.data?.data?.body || []))
       .catch((err) => console.error("Teachers error:", err));
-  }, [token, navigate]);
+  }, [token, navigate,api]);
 
   const getLevelColor = (level) => {
     switch (level) {

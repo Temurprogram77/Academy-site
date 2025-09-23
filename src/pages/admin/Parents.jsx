@@ -313,6 +313,37 @@ const Parents = () => {
           </div>
         </div>
       )}
+
+      {/* Parent details modal */}
+      {modalOpen && selectedParent && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-2xl">
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={24} />
+            </button>
+            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
+              Ota-ona ma’lumotlari
+            </h2>
+            <div className="space-y-3 text-gray-700">
+              <p>
+                <span className="font-medium">Ism:</span>{" "}
+                {selectedParent.fullName || "No name"}
+              </p>
+              <p>
+                <span className="font-medium">Telefon:</span>{" "}
+                {formatPhoneNumber(selectedParent.phone)}
+              </p>
+              <p>
+                <span className="font-medium">Role:</span>{" "}
+                {selectedParent.role || "PARENT"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

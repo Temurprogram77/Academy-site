@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { ChevronLeft, Phone, Users, UserIcon } from "lucide-react"
 
@@ -10,11 +10,8 @@ function UserDetail() {
   const [userData, setUserData] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchUserDetail()
-  }, [id])
-
-  const fetchUserDetail = async () => {
+  // 🔹 useCallback bilan fetchUserDetail
+  const fetchUserDetail = useCallback(async () => {
     setLoading(true)
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -40,7 +37,11 @@ function UserDetail() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    fetchUserDetail()
+  }, [fetchUserDetail])
 
   if (loading) {
     return (

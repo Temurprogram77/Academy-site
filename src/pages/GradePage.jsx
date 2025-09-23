@@ -45,7 +45,7 @@ const GradePage = () => {
     navigate("/login");
   }
 
-  const { data: students = [], isLoading, isError, error } = useQuery({
+  const { data: students = [], isLoading, isError } = useQuery({
     queryKey: ["students", token, groupId],
     queryFn: fetchStudents,
     retry: false,

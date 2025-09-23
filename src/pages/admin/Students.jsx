@@ -40,9 +40,11 @@ const Students = () => {
 
   const api = axios.create({
     baseURL: "http://167.86.121.42:8080",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : "",
+    },
   });
-
   const defaultImg = "https://i.ibb.co/6t0KxkX/default-user.png";
 
   useEffect(() => {

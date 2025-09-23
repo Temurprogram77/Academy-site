@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { FiX } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
@@ -11,16 +11,12 @@ const Rooms = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [addModal, setAddModal] = useState(false);
-  const [name, setname] = useState("");
+  const [name, setName] = useState("");
 
   const token = localStorage.getItem("token");
 
   // Xonalarni olish
-  useEffect(() => {
-    fetchRooms();
-  }, [token]);
-
-  const fetchRooms = () => {
+  const fetchRooms = useCallback(() => {
     setLoading(true);
     setError(null);
 
@@ -39,7 +35,11 @@ const Rooms = () => {
         setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
         setLoading(false);
       });
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
 
   // Qidiruv
   const handleSearch = (e) => {
@@ -60,8 +60,8 @@ const Rooms = () => {
 
     try {
       await axios.post(
-        `http://167.86.121.42:8080/room?name=${encodeURIComponent(name)}`,
-        {}, // ❗ body bo‘sh
+        "http://167.86.121.42:8080/room",
+        { name: name.trim() },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -71,7 +71,7 @@ const Rooms = () => {
 
       toast.success("Yangi xona qo‘shildi!");
       setAddModal(false);
-      setname("");
+      setName("");
       fetchRooms();
     } catch (err) {
       console.error("Error adding room:", err);
@@ -110,9 +110,9 @@ const Rooms = () => {
         <p className="text-red-500 mt-4 text-center">{error}</p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredRooms.map((room) => (
+          {filteredRooms.map((room, idx) => (
             <div
-              key={room.id}
+              key={room.id ?? idx}
               onClick={() => setSelectedRoom(room)}
               className="cursor-pointer bg-white p-6 rounded-2xl border-2 border-transparent hover:border-green-500 shadow-md hover:shadow-xl transition transform hover:-translate-y-1"
             >
@@ -196,7 +196,7 @@ const Rooms = () => {
                 type="text"
                 placeholder="Xona nomi"
                 value={name}
-                onChange={(e) => setname(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 className="border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />

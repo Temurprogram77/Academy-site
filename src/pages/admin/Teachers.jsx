@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiUser, FiX } from "react-icons/fi";
-import { EyeIcon, EyeOffIcon } from "lucide-react"; // 👁 parol uchun
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
-// Telefon raqam formatlash (jadval uchun)
+// Telefon raqam formatlash
 const formatPhoneNumber = (phone) => {
   if (!phone) return "Noma'lum";
   const cleaned = phone.replace(/\D/g, "");
@@ -26,8 +26,8 @@ const Teachers = () => {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [profile, setProfile] = useState(null);
 
-  // 🔥 yangi teacher uchun form state
   const [form, setForm] = useState({
     fullName: "",
     phoneNumber: "",
@@ -42,30 +42,43 @@ const Teachers = () => {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  // API orqali ustozlarni olish
+  const fetchProfile = useCallback(() => {
+    if (!token) return;
+    api
+      .get("/user/me")
+      .then((res) => setProfile(res.data))
+      .catch((err) => console.error(err));
+  }, [api, token]);
+
   useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // Teachers fetch
+  const fetchTeachers = async () => {
     if (!token) {
       setError("Token topilmadi!");
       setLoading(false);
       return;
     }
+    try {
+      const res = await api.get("/user/search?role=TEACHER&page=0&size=50");
+      const arr = res?.data?.data?.body ?? [];
+      setTeachers(arr);
+      setFilteredTeachers(arr);
+      setLoading(false);
+    } catch (err) {
+      console.error("Teachers error:", err);
+      setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
+      setLoading(false);
+    }
+  };
 
-    api
-      .get("/user/search?role=TEACHER&page=0&size=50")
-      .then((res) => {
-        const arr = res?.data?.data?.body ?? [];
-        setTeachers(arr);
-        setFilteredTeachers(arr);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Teachers error:", err);
-        setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
-        setLoading(false);
-      });
+  useEffect(() => {
+    fetchTeachers();
   }, [token]);
 
-  // Qidiruv bo‘yicha filter
+  // Search filter
   useEffect(() => {
     const normalizedSearch = (search || "").toLowerCase().trim();
     const filtered = teachers.filter((teacher) =>
@@ -74,44 +87,36 @@ const Teachers = () => {
     setFilteredTeachers(filtered);
   }, [search, teachers]);
 
-  // Modalni ochish
+  // Modal
   const openModal = (teacher) => {
-    if (teacher.fullName && teacher.phoneNumber && teacher.role) {
-      setSelectedTeacher(teacher);
-      setModalOpen(true);
-    } else {
-      alert("Bu ustozni ma’lumotlarini ko‘rib bo‘lmaydi!");
-    }
+    setSelectedTeacher(teacher);
+    setModalOpen(true);
   };
-
   const closeModal = () => {
     setSelectedTeacher(null);
     setModalOpen(false);
   };
 
-  // ✅ Teacher qo‘shish
+  // Add Teacher
   const handleAddTeacher = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         fullName: form.fullName,
-        // API ga faqat 998 bilan
         phoneNumber: form.phoneNumber.startsWith("998")
           ? form.phoneNumber
           : `998${form.phoneNumber}`,
         password: form.password,
+        role: "TEACHER", // role body ga qo‘shildi
       };
 
-      await api.post("/auth/saveUser?role=TEACHER", payload);
+      await api.post("/auth/saveUser", payload);
 
       alert("✅ O‘qituvchi qo‘shildi!");
       setAddModal(false);
       setForm({ fullName: "", phoneNumber: "", password: "" });
 
-      // Ro‘yxatni yangilash
-      const res = await api.get("/user/search?role=TEACHER&page=0&size=50");
-      setTeachers(res.data?.data?.body ?? []);
-      setFilteredTeachers(res.data?.data?.body ?? []);
+      fetchTeachers(); // listani yangilash
     } catch (err) {
       console.error("Add teacher error:", err.response?.data || err.message);
       alert("❌ O‘qituvchi qo‘shishda xatolik!");
@@ -193,7 +198,6 @@ const Teachers = () => {
                   )}
                   {teacher.fullName || "No name"}
                 </td>
-
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {formatPhoneNumber(teacher.phoneNumber)}
                 </td>
@@ -249,7 +253,6 @@ const Teachers = () => {
                 required
               />
 
-              {/* Telefon input */}
               <PhoneInput
                 country={"uz"}
                 onlyCountries={["uz"]}
@@ -266,7 +269,6 @@ const Teachers = () => {
                 }}
               />
 
-              {/* Parol input */}
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -284,11 +286,7 @@ const Teachers = () => {
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-2.5 text-gray-600"
                 >
-                  {showPassword ? (
-                    <EyeOffIcon size={20} />
-                  ) : (
-                    <EyeIcon size={20} />
-                  )}
+                  {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
                 </button>
               </div>
 
@@ -333,16 +331,14 @@ const Teachers = () => {
 
             <div className="space-y-3 text-gray-700">
               <p>
-                <span className="font-semibold">Ism:</span>{" "}
-                {selectedTeacher.fullName}
+                <span className="font-semibold">Ism:</span> {selectedTeacher.fullName}
               </p>
               <p>
                 <span className="font-semibold">Telefon:</span>{" "}
                 {formatPhoneNumber(selectedTeacher.phoneNumber)}
               </p>
               <p>
-                <span className="font-semibold">Role:</span>{" "}
-                {selectedTeacher.role}
+                <span className="font-semibold">Role:</span> {selectedTeacher.role}
               </p>
             </div>
           </div>
