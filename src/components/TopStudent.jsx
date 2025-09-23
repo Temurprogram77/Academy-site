@@ -110,7 +110,7 @@ const TopStudent = () => {
   return (
     <div className="my-10">
       <h1 className="text-xl sm:text-2xl text-center font-bold text-green-600 mb-6">
-        Eng yaxshi o‘quvchilar 👑
+        Eng yaxshi o‘quvchilar
       </h1>
 
       <div className="overflow-x-auto shadow rounded-lg">
