@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { Crown } from "lucide-react"; // 👑 toj ikona
 
 const fetchTopStudents = async (token) => {
   const { data } = await axios.get(
@@ -60,6 +61,36 @@ const TopStudent = () => {
     return phone;
   };
 
+  const getRankStyles = (idx) => {
+    switch (idx) {
+      case 0:
+        return "border-2 border-yellow-400 bg-yellow-50";
+      case 1:
+        return "border-2 border-gray-400 bg-gray-50";
+      case 2:
+        return "border-2 border-amber-600 bg-amber-50";
+      default:
+        return "";
+    }
+  };
+
+  const getRankIcon = (idx) => {
+    switch (idx) {
+      case 0:
+        return (
+          <span className="flex items-center gap-1">
+            <Crown className="w-5 h-5 text-yellow-500" /> 
+          </span>
+        );
+      case 1:
+        return <span className="text-gray-500"></span>;
+      case 2:
+        return <span className="text-amber-600"></span>;
+      default:
+        return idx + 1;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[20vh]">
@@ -79,7 +110,7 @@ const TopStudent = () => {
   return (
     <div className="my-10">
       <h1 className="text-xl sm:text-2xl text-center font-bold text-green-600 mb-6">
-        Eng yaxshi 5 ta o‘quvchi
+        Eng yaxshi o‘quvchilar 👑
       </h1>
 
       <div className="overflow-x-auto shadow rounded-lg">
@@ -98,8 +129,11 @@ const TopStudent = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {students.length > 0 ? (
               students.map((student, idx) => (
-                <tr key={student.id || idx} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                  <td className="px-3 sm:px-6 py-4 font-bold">{idx + 1}</td>
+                <tr
+                  key={student.id || idx}
+                  className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} ${getRankStyles(idx)}`}
+                >
+                  <td className="px-3 sm:px-6 py-4 font-bold">{getRankIcon(idx)}</td>
                   <td className="px-3 sm:px-6 py-4 font-semibold">{student.name || "No name"}</td>
                   <td className="px-3 sm:px-6 py-4">{formatPhoneNumber(student.phoneNumber)}</td>
                   <td className="px-3 sm:px-6 py-4">{student.parentName || "Ota/ona"}</td>
