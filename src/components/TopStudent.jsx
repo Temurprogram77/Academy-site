@@ -24,7 +24,12 @@ const TopStudent = () => {
     navigate("/login");
   }
 
-  const { data: students = [], isLoading, isError, error } = useQuery({
+  const {
+    data: students = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["top-students", token],
     queryFn: () => fetchTopStudents(token),
     retry: false,
@@ -66,9 +71,9 @@ const TopStudent = () => {
       case 0:
         return "border-2 border-yellow-400 bg-yellow-50";
       case 1:
-        return "border-2 border-gray-400 bg-gray-50";
+        return "border-2 border-gray-400 bg-gray-200";
       case 2:
-        return "border-2 border-amber-600 bg-amber-50";
+        return "border-2 border-[#605007] bg-gray-50";
       default:
         return "";
     }
@@ -79,13 +84,39 @@ const TopStudent = () => {
       case 0:
         return (
           <span className="flex items-center gap-1">
-            <Crown className="w-5 h-5 text-yellow-500" /> 
+            <Crown className="w-5 h-5 text-yellow-500" />{" "}
+            {/* 1-o‘rin: oltin toj */}
           </span>
         );
+
       case 1:
-        return <span className="text-gray-500"></span>;
+        return (
+          <span className="flex items-center gap-1">
+            <Crown className="w-5 h-5 text-gray-400" />{" "}
+            {/* 2-o‘rin: kumush toj */}
+          </span>
+        );
+
       case 2:
-        return <span className="text-amber-600"></span>;
+        return (
+          <span className="flex items-center gap-1">
+            <Crown className="w-5 h-5 text-amber-600" />{" "}
+          </span>
+        );
+
+      case 3:
+        return (
+          <span className="flex items-center gap-1">
+            <Crown className="w-5 h-5 text-green-500" />{" "}
+          </span>
+        );
+
+      case 4:
+        return (
+          <span className="flex items-center gap-1">
+            <Crown className="w-5 h-5 text-blue-500" />{" "}
+          </span>
+        );
       default:
         return idx + 1;
     }
@@ -117,12 +148,24 @@ const TopStudent = () => {
         <table className="w-full text-sm sm:text-base border-collapse">
           <thead className="bg-gray-100 text-black">
             <tr>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">#</th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Ism</th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Telefon</th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Ota/ona</th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Level</th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">Score</th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                #
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                Ism
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                Telefon
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                Ota/ona
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                Level
+              </th>
+              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                Score
+              </th>
             </tr>
           </thead>
 
@@ -131,21 +174,40 @@ const TopStudent = () => {
               students.map((student, idx) => (
                 <tr
                   key={student.id || idx}
-                  className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} ${getRankStyles(idx)}`}
+                  className={`${
+                    idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+                  } ${getRankStyles(idx)}`}
                 >
-                  <td className="px-3 sm:px-6 py-4 font-bold">{getRankIcon(idx)}</td>
-                  <td className="px-3 sm:px-6 py-4 font-semibold">{student.name || "No name"}</td>
-                  <td className="px-3 sm:px-6 py-4">{formatPhoneNumber(student.phoneNumber)}</td>
-                  <td className="px-3 sm:px-6 py-4">{student.parentName || "Ota/ona"}</td>
-                  <td className={`px-3 sm:px-6 py-2 text-center font-semibold ${getLevelColor(student.level)}`}>
+                  <td className="px-3 sm:px-6 py-4 font-bold">
+                    {getRankIcon(idx)}
+                  </td>
+                  <td className="px-3 sm:px-6 py-4 font-semibold">
+                    {student.name || "No name"}
+                  </td>
+                  <td className="px-3 sm:px-6 py-4">
+                    {formatPhoneNumber(student.phoneNumber)}
+                  </td>
+                  <td className="px-3 sm:px-6 py-4">
+                    {student.parentName || "Ota/ona"}
+                  </td>
+                  <td
+                    className={`px-3 sm:px-6 py-2 text-center font-semibold ${getLevelColor(
+                      student.level
+                    )}`}
+                  >
                     {student.level || "Level"}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 font-bold text-green-600">{student.score ?? 0}</td>
+                  <td className="px-3 sm:px-6 py-4 font-bold text-green-600">
+                    {student.score ?? 0}
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center px-3 sm:px-6 py-4 text-gray-500">
+                <td
+                  colSpan="6"
+                  className="text-center px-3 sm:px-6 py-4 text-gray-500"
+                >
                   Kechirasiz, top studentlar topilmadi!
                 </td>
               </tr>
