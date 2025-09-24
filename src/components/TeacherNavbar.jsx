@@ -5,17 +5,15 @@ import api from "../api/axios";
 const defaultImage =
   "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg";
 
-const fetchProfile = async () => {
-  const { data } = await api.get("/user");
-  return data.data;
-};
-
 const TeacherNavbar = () => {
   const navigate = useNavigate();
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
-    queryFn: fetchProfile,
+    queryFn: async () => {
+      const { data } = await api.get("/user");
+      return data.data;
+    },
   });
 
   return (

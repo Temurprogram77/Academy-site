@@ -1,53 +1,41 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { FiX } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const fetchRooms = async () => {
+  const token = localStorage.getItem("token");
+  const res = await axios.get("http://167.86.121.42:8080/room", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data?.data || [];
+};
 
 const Rooms = () => {
-  const [rooms, setRooms] = useState([]);
-  const [filteredRooms, setFilteredRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [addModal, setAddModal] = useState(false);
   const [name, setName] = useState("");
 
-  const token = localStorage.getItem("token");
+  const queryClient = useQueryClient();
 
-  // Xonalarni olish
-  const fetchRooms = useCallback(() => {
-    setLoading(true);
-    setError(null);
+  // React Query orqali ma'lumotlarni olish va cache qilish
+  const {
+    data: rooms = [],
+    isLoading,
+    error,
+  } = useQuery(["rooms"], fetchRooms, {
+    staleTime: 1000 * 60 * 5, // 5 daqiqa cache
+    cacheTime: 1000 * 60 * 10, // 10 daqiqa umumiy cache
+  });
 
-    axios
-      .get("http://167.86.121.42:8080/room", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const data = res?.data?.data || [];
-        setRooms(data);
-        setFilteredRooms(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching rooms:", err);
-        setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
-        setLoading(false);
-      });
-  }, [token]);
+  const filteredRooms = rooms.filter((room) =>
+    room.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
-
-  // Qidiruv
   const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchTerm(value);
-    setFilteredRooms(
-      rooms.filter((room) => room.name.toLowerCase().includes(value))
-    );
+    setSearchTerm(e.target.value);
   };
 
   // Xona qo‘shish
@@ -59,20 +47,17 @@ const Rooms = () => {
     }
 
     try {
+      const token = localStorage.getItem("token");
       await axios.post(
         "http://167.86.121.42:8080/room",
         { name: name.trim() },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Yangi xona qo‘shildi!");
       setAddModal(false);
       setName("");
-      fetchRooms();
+      queryClient.invalidateQueries(["rooms"]); // Cache yangilanadi
     } catch (err) {
       console.error("Error adding room:", err);
       toast.error("Xona qo‘shishda xatolik yuz berdi!");
@@ -102,12 +87,14 @@ const Rooms = () => {
       </div>
 
       {/* Loading / Error / Rooms */}
-      {loading ? (
+      {isLoading ? (
         <div className="mt-40 flex items-center justify-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
         </div>
       ) : error ? (
-        <p className="text-red-500 mt-4 text-center">{error}</p>
+        <p className="text-red-500 mt-4 text-center">
+          Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!
+        </p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredRooms.map((room, idx) => (

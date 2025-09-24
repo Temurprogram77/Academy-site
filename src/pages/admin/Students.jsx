@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
-import { FiX } from "react-icons/fi";
+import { FiX, FiUser } from "react-icons/fi";
 import { Eye, EyeOff } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
@@ -17,15 +18,37 @@ const formatPhoneNumber = (phone) => {
   return phone;
 };
 
+const token = localStorage.getItem("token");
+const api = axios.create({
+  baseURL: "http://167.86.121.42:8080",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: token ? `Bearer ${token}` : "",
+  },
+});
+const defaultImg = "https://i.ibb.co/6t0KxkX/default-user.png";
+
+const fetchStudents = async () => {
+  const res = await api.get("/user/search?role=STUDENT&page=0&size=50");
+  return res.data?.data?.body ?? [];
+};
+
+const fetchGroups = async () => {
+  const res = await api.get("/group/all");
+  return res.data?.success ? res.data.data : [];
+};
+
+const addStudentAPI = async (payload) => {
+  await api.post("/auth/saveStudent", payload);
+};
+
 const Students = () => {
-  const [students, setStudents] = useState([]);
-  const [filteredStudents, setFilteredStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [addModal, setAddModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -34,88 +57,21 @@ const Students = () => {
     imgUrl: "",
     groupId: "",
   });
-  const [groups, setGroups] = useState([]);
-  const [showPassword, setShowPassword] = useState(false);
-  const token = localStorage.getItem("token");
 
-  const api = axios.create({
-    baseURL: "http://167.86.121.42:8080",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
-    },
-  });
-  const defaultImg = "https://i.ibb.co/6t0KxkX/default-user.png";
+  // Students va Groups uchun querylar
+  const {
+    data: students = [],
+    isLoading,
+    isError,
+  } = useQuery(["students"], fetchStudents);
 
-  useEffect(() => {
-    if (!token) {
-      setError("Token topilmadi!");
-      setLoading(false);
-      return;
-    }
+  const { data: groups = [] } = useQuery(["groups"], fetchGroups);
 
-    api
-      .get("/user/search?role=STUDENT&page=0&size=50")
-      .then((res) => {
-        const arr = res?.data?.data?.body ?? [];
-        setStudents(arr);
-        setFilteredStudents(arr);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Malumotlarni yuklashda xatolik yuz berdi!");
-        setLoading(false);
-      });
-
-    axios
-      .get("http://167.86.121.42:8080/group/all", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        if (res.data?.success) setGroups(res.data.data);
-      })
-      .catch(() => toast.error("Guruhlarni yuklashda xatolik!"));
-  }, [token]);
-
-  useEffect(() => {
-    const normalizedSearch = (search || "").toLowerCase().trim();
-    const filtered = students.filter((student) =>
-      (student.fullName || "").toLowerCase().includes(normalizedSearch)
-    );
-    setFilteredStudents(filtered);
-  }, [search, students]);
-
-  const handleFormChange = (name, value) =>
-    setForm((prev) => ({ ...prev, [name]: value }));
-  const openStudentModal = (student) => {
-    setSelectedStudent(student);
-    setModalOpen(true);
-  };
-
-  const handleAddStudent = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!form.fullName || !form.phone || !form.password || !form.parentPhone) {
-      setError("Barcha maydonlar to‘ldirilishi kerak!");
-      return;
-    }
-
-    try {
-      const payload = {
-        fullName: form.fullName,
-        phone: form.phone.replace(/\D/g, ""), // API ga faqat 998...
-        password: form.password,
-        parentPhone: form.parentPhone.replace(/\D/g, ""),
-        imgUrl: form.imgUrl || "",
-        groupId: form.groupId ? Number(form.groupId) : null,
-      };
-
-      await axios.post("http://167.86.121.42:8080/auth/saveStudent", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+  // Student qo‘shish mutation
+  const mutation = useMutation(addStudentAPI, {
+    onSuccess: () => {
       toast.success("Yangi o‘quvchi qo‘shildi!");
+      queryClient.invalidateQueries(["students"]);
       setAddModal(false);
       setForm({
         fullName: "",
@@ -125,27 +81,50 @@ const Students = () => {
         imgUrl: "",
         groupId: "",
       });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Server xatosi yuz berdi");
+    },
+  });
 
-      const res = await api.get("/user/search?role=STUDENT&page=0&size=50");
-      setStudents(res.data?.data?.body ?? []);
-      setFilteredStudents(res.data?.data?.body ?? []);
-    } catch (err) {
-      console.error("AddStudent error:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Server xatosi yuz berdi");
+  const filteredStudents = students.filter((student) =>
+    (student.fullName || "").toLowerCase().includes(search.toLowerCase().trim())
+  );
+
+  const handleFormChange = (name, value) =>
+    setForm((prev) => ({ ...prev, [name]: value }));
+
+  const handleAddStudent = (e) => {
+    e.preventDefault();
+    if (!form.fullName || !form.phone || !form.password || !form.parentPhone) {
+      toast.error("Barcha maydonlar to‘ldirilishi kerak!");
+      return;
     }
+
+    const payload = {
+      fullName: form.fullName,
+      phone: form.phone.replace(/\D/g, ""),
+      password: form.password,
+      parentPhone: form.parentPhone.replace(/\D/g, ""),
+      imgUrl: form.imgUrl || "",
+      groupId: form.groupId ? Number(form.groupId) : null,
+    };
+    mutation.mutate(payload);
   };
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="mt-80 flex items-center justify-center bg-[#F3F4F6]">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
       </div>
     );
 
-  if (error)
+  if (isError)
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-red-500 font-semibold">{error}</p>
+        <p className="text-red-500 font-semibold">
+          Malumotlarni yuklashda xatolik yuz berdi!
+        </p>
       </div>
     );
 
@@ -194,11 +173,17 @@ const Students = () => {
                   className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
-                    <img
-                      src={student.imgUrl || defaultImg}
-                      alt="student"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
+                    {student.imgUrl ? (
+                      <img
+                        src={student.imgUrl}
+                        alt="student"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                        <FiUser className="text-gray-500" size={16} />
+                      </div>
+                    )}
                     {student.fullName || "No name"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -209,7 +194,10 @@ const Students = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
-                      onClick={() => openStudentModal(student)}
+                      onClick={() => {
+                        setSelectedStudent(student);
+                        setModalOpen(true);
+                      }}
                       className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
                     >
                       Ko‘proq
@@ -284,7 +272,6 @@ const Students = () => {
             <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
               Yangi o‘quvchi qo‘shish
             </h2>
-            {error && <p className="text-red-500 text-center mb-2">{error}</p>}
             <form className="flex flex-col gap-3" onSubmit={handleAddStudent}>
               <label className="text-sm font-medium text-gray-700">Ism</label>
               <input
@@ -305,12 +292,6 @@ const Students = () => {
                 onChange={(value) => handleFormChange("phone", value)}
                 inputClass="w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Telefon raqam"
-                inputStyle={{
-                  width: "100%",
-                  borderRadius: "0.375rem",
-                  padding: "16px 12px",
-                  border: "1px solid #E5E7EB",
-                }}
               />
 
               <label className="text-sm font-medium text-gray-700">
@@ -322,12 +303,6 @@ const Students = () => {
                 onChange={(value) => handleFormChange("parentPhone", value)}
                 inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Parent telefon"
-                inputStyle={{
-                  width: "100%",
-                  borderRadius: "0.375rem",
-                  padding: "16px 12px",
-                  border: "1px solid #E5E7EB",
-                }}
               />
 
               <label className="text-sm font-medium text-gray-700">

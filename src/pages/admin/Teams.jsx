@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiX } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 
 const weekOptions = [
   "MONDAY",
@@ -18,10 +19,6 @@ const api = axios.create({
 });
 
 const Teams = () => {
-  const [teams, setTeams] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
@@ -37,79 +34,58 @@ const Teams = () => {
 
   const token = localStorage.getItem("token");
 
-  // Guruh va xonalarni olish (asosiy fetch)
-  const fetchTeams = useCallback(
-    async (query = "") => {
-      try {
-        setLoading(true);
+  // React Query fetch
+  const fetchTeams = async ({ queryKey }) => {
+    const [searchQuery] = queryKey;
+    const [groupsRes, roomsRes] = await Promise.all([
+      api.get(`/group?name=${searchQuery}&page=0&size=50`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      api.get("/room", { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
 
-        const [groupsRes, roomsRes] = await Promise.all([
-          api.get(`/group?name=${query}&page=0&size=50`, {
+    const groupsArr = groupsRes?.data?.data?.body ?? [];
+    const roomsArr = roomsRes?.data?.data ?? [];
+
+    const detailedGroups = await Promise.all(
+      groupsArr.map(async (g) => {
+        try {
+          const res = await api.get(`/group/${g.id}`, {
             headers: { Authorization: `Bearer ${token}` },
-          }),
-          api.get("/room", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+          });
+          return res.data?.data || g;
+        } catch (err) {
+          console.error(`Guruh ${g.id} ma’lumotini olishda xatolik:`, err);
+          return g;
+        }
+      })
+    );
 
-        const groupsArr = groupsRes?.data?.data?.body ?? [];
-        const roomsArr = roomsRes?.data?.data ?? [];
+    return { teams: detailedGroups, rooms: roomsArr };
+  };
 
-        // Har bir group uchun to‘liq ma’lumot olish
-        const detailedGroups = await Promise.all(
-          groupsArr.map(async (g) => {
-            try {
-              const res = await api.get(`/group/${g.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              return res.data?.data || g;
-            } catch (err) {
-              console.error(`Guruh ${g.id} ma’lumotini olishda xatolik:`, err);
-              return g;
-            }
-          })
-        );
-
-        setTeams(detailedGroups);
-        setRooms(roomsArr);
-      } catch (err) {
-        console.error(err);
-        setError("❌ Ma’lumotlarni yuklashda xatolik!");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [token]
+  const { data, isLoading, isError, refetch } = useQuery(
+    ["teams", search.trim()],
+    fetchTeams,
+    {
+      staleTime: 1000 * 60 * 5, // 5 daqiqa cache
+      cacheTime: 1000 * 60 * 10, // 10 daqiqa
+      keepPreviousData: true,
+    }
   );
 
-  useEffect(() => {
-    if (!token) {
-      setError("Token topilmadi!");
-      setLoading(false);
-      return;
-    }
-    fetchTeams();
-  }, [token, fetchTeams]);
+  const teams = data?.teams || [];
+  const rooms = data?.rooms || [];
 
-  // Search API orqali qidirish
+  // Search debouncing
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchTeams(search.trim());
-    }, 500); // 0.5s kechikish
-    return () => clearTimeout(delayDebounce);
-  }, [search, fetchTeams]);
+    const delay = setTimeout(() => refetch(), 500);
+    return () => clearTimeout(delay);
+  }, [search, refetch]);
 
-  const openTeamModal = async (team) => {
-    try {
-      const res = await api.get(`/group/${team.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSelectedTeam(res.data?.data || team);
-      setModalOpen(true);
-    } catch (err) {
-      console.error(err);
-      toast.error("❌ Guruh ma’lumotini olishda xatolik!");
-    }
+  const openTeamModal = (team) => {
+    setSelectedTeam(team);
+    setModalOpen(true);
   };
 
   const handleFormChange = (e) => {
@@ -127,7 +103,6 @@ const Teams = () => {
     }));
   };
 
-  // Yangi guruh qo‘shish
   const handleAddTeam = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return toast.error("⚠ Guruh nomini kiriting!");
@@ -147,7 +122,6 @@ const Teams = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       toast.success("✅ Guruh qo‘shildi!");
       setAddModal(false);
       setForm({
@@ -158,15 +132,21 @@ const Teams = () => {
         roomId: "",
         teacherId: "",
       });
-      fetchTeams();
+      refetch();
     } catch (err) {
       console.error(err);
       toast.error("❌ Guruh qo‘shishda xatolik!");
     }
   };
 
-  if (loading) return <div>⏳ Yuklanmoqda...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
+  if (isLoading)
+    return (
+      <div className="mt-40 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
+      </div>
+    );
+  if (isError)
+    return <div className="text-red-500">Ma’lumotlarni yuklashda xatolik!</div>;
 
   return (
     <div className="px-6">
@@ -334,7 +314,6 @@ const Teams = () => {
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
-              {/* Weekdays */}
               <div className="flex flex-wrap gap-2">
                 {weekOptions.map((day) => (
                   <label key={day} className="flex items-center gap-1">
@@ -348,7 +327,6 @@ const Teams = () => {
                   </label>
                 ))}
               </div>
-              {/* TeacherId */}
               <input
                 type="number"
                 name="teacherId"
@@ -358,7 +336,6 @@ const Teams = () => {
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
-              {/* Room select */}
               <select
                 name="roomId"
                 value={form.roomId}
