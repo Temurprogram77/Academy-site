@@ -1,53 +1,41 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { FiX } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const fetchRooms = async () => {
+  const token = localStorage.getItem("token");
+  const res = await axios.get("http://167.86.121.42:8080/room", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data?.data || [];
+};
 
 const Rooms = () => {
-  const [rooms, setRooms] = useState([]);
-  const [filteredRooms, setFilteredRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [addModal, setAddModal] = useState(false);
-  const [name, setname] = useState("");
+  const [name, setName] = useState("");
 
-  const token = localStorage.getItem("token");
+  const queryClient = useQueryClient();
 
-  // Xonalarni olish
-  useEffect(() => {
-    fetchRooms();
-  }, [token]);
+  // React Query orqali ma'lumotlarni olish va cache qilish
+  const {
+    data: rooms = [],
+    isLoading,
+    error,
+  } = useQuery(["rooms"], fetchRooms, {
+    staleTime: 1000 * 60 * 5, // 5 daqiqa cache
+    cacheTime: 1000 * 60 * 10, // 10 daqiqa umumiy cache
+  });
 
-  const fetchRooms = () => {
-    setLoading(true);
-    setError(null);
+  const filteredRooms = rooms.filter((room) =>
+    room.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    axios
-      .get("http://167.86.121.42:8080/room", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const data = res?.data?.data || [];
-        setRooms(data);
-        setFilteredRooms(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching rooms:", err);
-        setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
-        setLoading(false);
-      });
-  };
-
-  // Qidiruv
   const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchTerm(value);
-    setFilteredRooms(
-      rooms.filter((room) => room.name.toLowerCase().includes(value))
-    );
+    setSearchTerm(e.target.value);
   };
 
   // Xona qo‘shish
@@ -59,20 +47,17 @@ const Rooms = () => {
     }
 
     try {
+      const token = localStorage.getItem("token");
       await axios.post(
-        `http://167.86.121.42:8080/room?name=${encodeURIComponent(name)}`,
-        {}, // ❗ body bo‘sh
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        "http://167.86.121.42:8080/room",
+        { name: name.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Yangi xona qo‘shildi!");
       setAddModal(false);
-      setname("");
-      fetchRooms();
+      setName("");
+      queryClient.invalidateQueries(["rooms"]); // Cache yangilanadi
     } catch (err) {
       console.error("Error adding room:", err);
       toast.error("Xona qo‘shishda xatolik yuz berdi!");
@@ -102,17 +87,19 @@ const Rooms = () => {
       </div>
 
       {/* Loading / Error / Rooms */}
-      {loading ? (
+      {isLoading ? (
         <div className="mt-40 flex items-center justify-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
         </div>
       ) : error ? (
-        <p className="text-red-500 mt-4 text-center">{error}</p>
+        <p className="text-red-500 mt-4 text-center">
+          Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!
+        </p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredRooms.map((room) => (
+          {filteredRooms.map((room, idx) => (
             <div
-              key={room.id}
+              key={room.id ?? idx}
               onClick={() => setSelectedRoom(room)}
               className="cursor-pointer bg-white p-6 rounded-2xl border-2 border-transparent hover:border-green-500 shadow-md hover:shadow-xl transition transform hover:-translate-y-1"
             >
@@ -196,7 +183,7 @@ const Rooms = () => {
                 type="text"
                 placeholder="Xona nomi"
                 value={name}
-                onChange={(e) => setname(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 className="border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />

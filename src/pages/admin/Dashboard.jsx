@@ -11,8 +11,16 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      const token = localStorage.getItem("token");
+
+      // 1️⃣ avval localStorage cache tekshirish
+      const cachedData = localStorage.getItem("dashboardCache");
+      if (cachedData) {
+        setData(JSON.parse(cachedData));
+        setLoading(false);
+      }
+
       try {
-        const token = localStorage.getItem("token"); // agar auth kerak bo'lsa
         const res = await axios.get(
           "http://167.86.121.42:8080/user/admin-dashboard",
           {
@@ -24,12 +32,14 @@ const Dashboard = () => {
 
         if (res.data.success) {
           setData(res.data.data);
+          // 2️⃣ serverdan kelgan ma’lumotni cache ga saqlash
+          localStorage.setItem("dashboardCache", JSON.stringify(res.data.data));
         } else {
-          setError("Ma'lumot olishda xatolik yuz berdi.");
+          if (!cachedData) setError("Ma'lumot olishda xatolik yuz berdi.");
         }
       } catch (err) {
         console.error(err);
-        setError("Kechirasiz hozirda server bilan xatolik.");
+        if (!cachedData) setError("Kechirasiz hozirda server bilan xatolik.");
       } finally {
         setLoading(false);
       }

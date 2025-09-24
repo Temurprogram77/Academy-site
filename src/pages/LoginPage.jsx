@@ -55,16 +55,19 @@ const LoginPage = () => {
       );
 
       if (res.data.success) {
+        setSuccessMessage("✅ Login muvaffaqiyatli!");
         localStorage.setItem("token", res.data.data);
         localStorage.setItem("role", res.data.message);
 
         const role = res.data.message;
 
-        if (role === "ADMIN") navigate("/admin-dashboard");
-        else if (role === "TEACHER") navigate("/teacher-dashboard");
-        else if (role === "STUDENT") navigate("/user-dashboard");
-        else if (role === "PARENT") navigate("/user-dashboard");
-        else setErrorMessage("⚠️ Noma'lum rol qaytdi.");
+        setTimeout(() => {
+          // biroz kutib, keyin yo‘naltirish
+          if (role === "ADMIN") navigate("/admin-dashboard");
+          else if (role === "TEACHER") navigate("/teacher-dashboard");
+          else if (role === "STUDENT") navigate("/user-dashboard");
+          else if (role === "PARENT") navigate("/user-dashboard");
+        }, 500); // 0.5s kutish
       } else {
         setErrorMessage("Telefon nomer yoki password noto‘g‘ri.");
       }
@@ -109,11 +112,7 @@ const LoginPage = () => {
                   }}
                 >
                   <div className="w-full flex justify-center">
-                    <img
-                      src={logo}
-                      alt="Logo"
-                      className="w-[500px]"
-                    />
+                    <img src={logo} alt="Logo" className="w-[500px]" />
                   </div>
                   <h2 className="text-3xl font-semibold text-center my-4">
                     Login

@@ -14,7 +14,7 @@ const getTeacherDashboard = async (token) => {
 };
 
 const getTeacherGroups = async ({ queryKey }) => {
-  const [_key, token, searchQuery] = queryKey;
+  const [token, searchQuery] = queryKey;
   const { data } = await axios.get("http://167.86.121.42:8080/group", {
     headers: { Authorization: `Bearer ${token}` },
     params: {
@@ -38,7 +38,6 @@ const TeacherGroups = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
-    data: dashboard,
     isLoading: dashboardLoading,
     error: dashboardError,
   } = useQuery({

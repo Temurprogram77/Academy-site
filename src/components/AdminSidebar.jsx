@@ -8,7 +8,6 @@ import { LuSunMoon } from "react-icons/lu";
 import { TiHomeOutline } from "react-icons/ti";
 import { MdMeetingRoom } from "react-icons/md";
 import { AiOutlineTeam } from "react-icons/ai";
-import { User } from "lucide-react";
 const { logo } = dataImages;
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {

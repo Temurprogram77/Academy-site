@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiUser, FiX } from "react-icons/fi";
@@ -6,6 +6,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Telefon formatlash (ko‘rinish uchun)
 const formatPhoneNumber = (phone) => {
@@ -20,61 +21,45 @@ const formatPhoneNumber = (phone) => {
   return phone;
 };
 
+// API dan parentlarni olish
+const fetchParents = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("Token topilmadi!");
+  const res = await axios.get(
+    "http://167.86.121.42:8080/user/search?role=PARENT&page=0&size=50",
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data?.data?.body || [];
+};
+
 const Parents = () => {
-  const [parents, setParents] = useState([]);
-  const [filteredParents, setFilteredParents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedParent, setSelectedParent] = useState(null);
   const [addModal, setAddModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({ fullName: "", phone: "", password: "" });
+  const [error, setError] = useState("");
 
-  const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    password: "",
+  const queryClient = useQueryClient();
+
+  const {
+    data: parents = [],
+    isLoading,
+    isError,
+    error: fetchError,
+  } = useQuery(["parents"], fetchParents, {
+    staleTime: 1000 * 60 * 5, // 5 daqiqa cache
+    cacheTime: 1000 * 60 * 10, // 10 daqiqa cache
   });
 
-  const token = localStorage.getItem("token");
+  const filteredParents = parents.filter((parent) =>
+    (parent.fullName || "").toLowerCase().includes(search.toLowerCase())
+  );
 
-  const api = axios.create({
-    baseURL: "http://167.86.121.42:8080",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  // Parentlarni olish
-  useEffect(() => {
-    if (!token) {
-      setError("Token topilmadi!");
-      setLoading(false);
-      return;
-    }
-
-    api
-      .get("/user/search?role=PARENT&page=0&size=50")
-      .then((res) => {
-        const arr = res?.data?.data?.body ?? [];
-        setParents(arr);
-        setFilteredParents(arr);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Ma’lumotlarni yuklashda xatolik yuz berdi!");
-        setLoading(false);
-      });
-  }, [token]);
-
-  // Qidiruv
-  useEffect(() => {
-    const normalizedSearch = (search || "").toLowerCase().trim();
-    const filtered = parents.filter((parent) =>
-      (parent.fullName || "").toLowerCase().includes(normalizedSearch)
-    );
-    setFilteredParents(filtered);
-  }, [search, parents]);
+  const handleFormChange = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const openModal = (parent) => {
     setSelectedParent(parent);
@@ -84,10 +69,6 @@ const Parents = () => {
   const closeModal = () => {
     setModalOpen(false);
     setSelectedParent(null);
-  };
-
-  const handleFormChange = (name, value) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddParent = async (e) => {
@@ -100,15 +81,14 @@ const Parents = () => {
     }
 
     try {
-      const payload = {
-        fullName: form.fullName.trim(),
-        phoneNumber: form.phone.replace(/\D/g, ""), // APIga yuboriladigan format (998...)
-        password: form.password.trim(),
-      };
-
+      const token = localStorage.getItem("token");
       await axios.post(
         "http://167.86.121.42:8080/auth/saveUser?role=PARENT",
-        payload,
+        {
+          fullName: form.fullName.trim(),
+          phoneNumber: form.phone.replace(/\D/g, ""),
+          password: form.password.trim(),
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -116,9 +96,8 @@ const Parents = () => {
       setAddModal(false);
       setForm({ fullName: "", phone: "", password: "" });
 
-      const res = await api.get("/user/search?role=PARENT&page=0&size=50");
-      setParents(res.data?.data?.body ?? []);
-      setFilteredParents(res.data?.data?.body ?? []);
+      // Cache yangilash
+      queryClient.invalidateQueries(["parents"]);
     } catch (err) {
       console.error("AddParent error:", err);
       if (err.response)
@@ -129,11 +108,18 @@ const Parents = () => {
     }
   };
 
-  if (loading)
+  if (isLoading)
     return (
       <div className="mt-80 flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
       </div>
+    );
+
+  if (isError)
+    return (
+      <p className="text-red-500 text-center mt-20">
+        {fetchError?.message || "Ma’lumotlarni yuklashda xatolik yuz berdi!"}
+      </p>
     );
 
   return (
@@ -253,7 +239,6 @@ const Parents = () => {
                   required
                 />
               </div>
-
               <div className="flex flex-col">
                 <label htmlFor="phone" className="text-gray-700 font-medium">
                   Telefon raqam
@@ -266,7 +251,6 @@ const Parents = () => {
                   inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   masks={{ uz: "..-...-..-.." }}
                   placeholder="+998 90-999-99-99"
-                  id="phone"
                   inputStyle={{
                     width: "100%",
                     borderRadius: "0.375rem",
@@ -275,7 +259,6 @@ const Parents = () => {
                   }}
                 />
               </div>
-
               <div className="flex flex-col relative">
                 <label htmlFor="password" className="text-gray-700 font-medium">
                   Parol
@@ -302,7 +285,6 @@ const Parents = () => {
                   )}
                 </button>
               </div>
-
               <button
                 type="submit"
                 className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
@@ -310,6 +292,37 @@ const Parents = () => {
                 Qo‘shish
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Parent details modal */}
+      {modalOpen && selectedParent && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-2xl">
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <FiX size={24} />
+            </button>
+            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
+              Ota-ona ma’lumotlari
+            </h2>
+            <div className="space-y-3 text-gray-700">
+              <p>
+                <span className="font-medium">Ism:</span>{" "}
+                {selectedParent.fullName || "No name"}
+              </p>
+              <p>
+                <span className="font-medium">Telefon:</span>{" "}
+                {formatPhoneNumber(selectedParent.phone)}
+              </p>
+              <p>
+                <span className="font-medium">Role:</span>{" "}
+                {selectedParent.role || "PARENT"}
+              </p>
+            </div>
           </div>
         </div>
       )}

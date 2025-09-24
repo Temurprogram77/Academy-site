@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiUser, FiX } from "react-icons/fi";
-import { EyeIcon, EyeOffIcon } from "lucide-react"; // 👁 parol uchun
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
-// Telefon raqam formatlash (jadval uchun)
+// Telefon raqam formatlash
 const formatPhoneNumber = (phone) => {
   if (!phone) return "Noma'lum";
   const cleaned = phone.replace(/\D/g, "");
@@ -26,8 +26,6 @@ const Teachers = () => {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
-
-  // 🔥 yangi teacher uchun form state
   const [form, setForm] = useState({
     fullName: "",
     phoneNumber: "",
@@ -37,35 +35,51 @@ const Teachers = () => {
 
   const token = localStorage.getItem("token");
 
-  const api = axios.create({
-    baseURL: "http://167.86.121.42:8080",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  // API orqali ustozlarni olish
+  // Teachers fetch (cache + API) – useEffect bilan
   useEffect(() => {
-    if (!token) {
-      setError("Token topilmadi!");
-      setLoading(false);
-      return;
+    let isMounted = true;
+    const cached = localStorage.getItem("teachersCache");
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (isMounted) {
+        setTeachers(parsed);
+        setFilteredTeachers(parsed);
+        setLoading(false);
+      }
     }
 
-    api
-      .get("/user/search?role=TEACHER&page=0&size=50")
-      .then((res) => {
-        const arr = res?.data?.data?.body ?? [];
-        setTeachers(arr);
-        setFilteredTeachers(arr);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Teachers error:", err);
-        setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
-        setLoading(false);
-      });
+    if (!cached) {
+      axios
+        .get(
+          "http://167.86.121.42:8080/user/search?role=TEACHER&page=0&size=50",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+        .then((res) => {
+          if (!isMounted) return;
+          const arr = res?.data?.data?.body ?? [];
+          setTeachers(arr);
+          setFilteredTeachers(arr);
+          setLoading(false);
+          localStorage.setItem("teachersCache", JSON.stringify(arr));
+        })
+        .catch((err) => {
+          console.error("Teachers error:", err);
+          if (!isMounted) {
+            setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
+            setLoading(false);
+          }
+        });
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, [token]);
 
-  // Qidiruv bo‘yicha filter
+  // Search filter
   useEffect(() => {
     const normalizedSearch = (search || "").toLowerCase().trim();
     const filtered = teachers.filter((teacher) =>
@@ -74,44 +88,40 @@ const Teachers = () => {
     setFilteredTeachers(filtered);
   }, [search, teachers]);
 
-  // Modalni ochish
+  // Modal
   const openModal = (teacher) => {
-    if (teacher.fullName && teacher.phoneNumber && teacher.role) {
-      setSelectedTeacher(teacher);
-      setModalOpen(true);
-    } else {
-      alert("Bu ustozni ma’lumotlarini ko‘rib bo‘lmaydi!");
-    }
+    setSelectedTeacher(teacher);
+    setModalOpen(true);
   };
-
   const closeModal = () => {
     setSelectedTeacher(null);
     setModalOpen(false);
   };
 
-  // ✅ Teacher qo‘shish
+  // Add Teacher
   const handleAddTeacher = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         fullName: form.fullName,
-        // API ga faqat 998 bilan
         phoneNumber: form.phoneNumber.startsWith("998")
           ? form.phoneNumber
           : `998${form.phoneNumber}`,
         password: form.password,
+        role: "TEACHER",
       };
 
-      await api.post("/auth/saveUser?role=TEACHER", payload);
+      await axios.post("http://167.86.121.42:8080/auth/saveUser", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       alert("✅ O‘qituvchi qo‘shildi!");
       setAddModal(false);
       setForm({ fullName: "", phoneNumber: "", password: "" });
 
-      // Ro‘yxatni yangilash
-      const res = await api.get("/user/search?role=TEACHER&page=0&size=50");
-      setTeachers(res.data?.data?.body ?? []);
-      setFilteredTeachers(res.data?.data?.body ?? []);
+      // Cache va teachers yangilash
+      localStorage.removeItem("teachersCache");
+      window.location.reload(); // yoki fetchTeachers’ni qayta ishlash mumkin
     } catch (err) {
       console.error("Add teacher error:", err.response?.data || err.message);
       alert("❌ O‘qituvchi qo‘shishda xatolik!");
@@ -193,7 +203,6 @@ const Teachers = () => {
                   )}
                   {teacher.fullName || "No name"}
                 </td>
-
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {formatPhoneNumber(teacher.phoneNumber)}
                 </td>
@@ -248,8 +257,6 @@ const Teachers = () => {
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
-
-              {/* Telefon input */}
               <PhoneInput
                 country={"uz"}
                 onlyCountries={["uz"]}
@@ -265,8 +272,6 @@ const Teachers = () => {
                   border: "1px solid #d1d5db",
                 }}
               />
-
-              {/* Parol input */}
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -291,7 +296,6 @@ const Teachers = () => {
                   )}
                 </button>
               </div>
-
               <button
                 type="submit"
                 className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
@@ -313,7 +317,6 @@ const Teachers = () => {
             >
               <FiX size={24} />
             </button>
-
             <div className="flex items-center gap-4 mb-4 border-b pb-2">
               {selectedTeacher.imageUrl ? (
                 <img
@@ -330,7 +333,6 @@ const Teachers = () => {
                 O‘qituvchi ma’lumotlari
               </h2>
             </div>
-
             <div className="space-y-3 text-gray-700">
               <p>
                 <span className="font-semibold">Ism:</span>{" "}
