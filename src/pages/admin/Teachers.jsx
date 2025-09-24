@@ -9,10 +9,12 @@ import "react-phone-input-2/lib/style.css";
 // Telefon raqam formatlash
 const formatPhoneNumber = (phone) => {
   if (!phone) return "Noma'lum";
-  const cleaned = phone.replace(/\D/g, "");
-  const match = cleaned.match(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
-  if (match) {
-    return `+${match[1]} ${match[2]}-${match[3]}-${match[4]}-${match[5]}`;
+  const cleaned = phone.replace(/\D/g, ""); // faqat raqam qoldiradi
+  if (cleaned.length === 12 && cleaned.startsWith("998")) {
+    return `+998 ${cleaned.slice(3, 5)}-${cleaned.slice(5, 8)}-${cleaned.slice(
+      8,
+      10
+    )}-${cleaned.slice(10, 12)}`;
   }
   return phone;
 };
@@ -35,48 +37,28 @@ const Teachers = () => {
 
   const token = localStorage.getItem("token");
 
-  // Teachers fetch (cache + API) – useEffect bilan
+  // Teachers fetch
   useEffect(() => {
-    let isMounted = true;
-    const cached = localStorage.getItem("teachersCache");
-
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (isMounted) {
-        setTeachers(parsed);
-        setFilteredTeachers(parsed);
+    setLoading(true);
+    axios
+      .get(
+        "http://167.86.121.42:8080/user/search?role=TEACHER&page=0&size=50",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      .then((res) => {
+        const arr = res?.data?.data?.body ?? [];
+        setTeachers(arr);
+        setFilteredTeachers(arr);
         setLoading(false);
-      }
-    }
-
-    if (!cached) {
-      axios
-        .get(
-          "http://167.86.121.42:8080/user/search?role=TEACHER&page=0&size=50",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((res) => {
-          if (!isMounted) return;
-          const arr = res?.data?.data?.body ?? [];
-          setTeachers(arr);
-          setFilteredTeachers(arr);
-          setLoading(false);
-          localStorage.setItem("teachersCache", JSON.stringify(arr));
-        })
-        .catch((err) => {
-          console.error("Teachers error:", err);
-          if (!isMounted) {
-            setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
-            setLoading(false);
-          }
-        });
-    }
-
-    return () => {
-      isMounted = false;
-    };
+        localStorage.setItem("teachersCache", JSON.stringify(arr));
+      })
+      .catch((err) => {
+        console.error("Teachers error:", err);
+        setError("Kechirasiz, ma’lumotlarni yuklashda xatolik yuz berdi!");
+        setLoading(false);
+      });
   }, [token]);
 
   // Search filter
@@ -108,20 +90,21 @@ const Teachers = () => {
           ? form.phoneNumber
           : `998${form.phoneNumber}`,
         password: form.password,
-        role: "TEACHER",
       };
 
-      await axios.post("http://167.86.121.42:8080/auth/saveUser", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post(
+        "http://167.86.121.42:8080/auth/saveUser?role=TEACHER",
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       alert("✅ O‘qituvchi qo‘shildi!");
       setAddModal(false);
       setForm({ fullName: "", phoneNumber: "", password: "" });
-
-      // Cache va teachers yangilash
       localStorage.removeItem("teachersCache");
-      window.location.reload(); // yoki fetchTeachers’ni qayta ishlash mumkin
+      window.location.reload();
     } catch (err) {
       console.error("Add teacher error:", err.response?.data || err.message);
       alert("❌ O‘qituvchi qo‘shishda xatolik!");
@@ -204,7 +187,9 @@ const Teachers = () => {
                   {teacher.fullName || "No name"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {formatPhoneNumber(teacher.phoneNumber)}
+                  {formatPhoneNumber(
+                    teacher.phoneNumber || teacher.phone || teacher.username
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {teacher.role || "TEACHER"}
@@ -340,7 +325,11 @@ const Teachers = () => {
               </p>
               <p>
                 <span className="font-semibold">Telefon:</span>{" "}
-                {formatPhoneNumber(selectedTeacher.phoneNumber)}
+                {formatPhoneNumber(
+                  selectedTeacher.phoneNumber ||
+                    selectedTeacher.phone ||
+                    selectedTeacher.username
+                )}
               </p>
               <p>
                 <span className="font-semibold">Role:</span>{" "}
