@@ -5,7 +5,7 @@ import { Crown } from "lucide-react"; // 👑 toj ikona
 
 const fetchTopStudents = async (token) => {
   const { data } = await axios.get(
-    `https://nazorat.sferaacademy.uz/api/user/topStudentsForTeacher`,
+    `http://167.86.121.42:8080/user/topStudentsForTeacher`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
 

@@ -15,7 +15,7 @@ const weekOptions = [
   "SATURDAY",
 ];
 
-const api = axios.create({ baseURL: "https://nazorat.sferaacademy.uz/api" });
+const api = axios.create({ baseURL: "http://167.86.121.42:8080" });
 
 const Teams = () => {
   const navigate = useNavigate();

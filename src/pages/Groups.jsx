@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const getTeacherDashboard = async (token) => {
   const { data } = await axios.get(
-    "https://nazorat.sferaacademy.uz/api/user/teacher-dashboard",
+    "http://167.86.121.42:8080/user/teacher-dashboard",
     {
       headers: { Authorization: `Bearer ${token}` },
     }
@@ -14,8 +14,8 @@ const getTeacherDashboard = async (token) => {
 };
 
 const getTeacherGroups = async ({ queryKey }) => {
-  const [token, searchQuery] = queryKey;
-  const { data } = await axios.get("https://nazorat.sferaacademy.uz/api/group", {
+  const [_key, token, searchQuery] = queryKey;
+  const { data } = await axios.get("http://167.86.121.42:8080/group", {
     headers: { Authorization: `Bearer ${token}` },
     params: {
       page: 0,
@@ -30,14 +30,17 @@ const TeacherGroups = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  if (!token) {
-    navigate("/login");
-  }
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token, navigate]);
 
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
+    data: dashboard,
     isLoading: dashboardLoading,
     error: dashboardError,
   } = useQuery({
@@ -86,14 +89,10 @@ const TeacherGroups = () => {
         </h1>
       </div>
     );
-  }
-
+  } 
   return (
     <div className="mt-[3rem]">
       <div className="max-w-[1300px] mx-auto px-4">
-        <h1 className="text-4xl font-bold text-green-400 text-center">
-          Salom, {groups[0]?.teacherName}
-        </h1>
 
         <div className="flex flex-col md:flex-row justify-between items-center mb-[3rem] mt-[2rem] gap-4">
           <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500">

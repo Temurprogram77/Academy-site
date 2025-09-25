@@ -8,21 +8,21 @@ import { MdDelete } from "react-icons/md";
 import { toast } from "sonner";
 
 const fetchMarks = async (token) => {
-  const { data } = await axios.get("https://nazorat.sferaacademy.uz/api/mark/myMarks", {
+  const { data } = await axios.get("http://167.86.121.42:8080/mark/myMarks", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data?.data || [];
 };
 
 const deleteMark = async ({ id, token }) => {
-  await axios.delete(`https://nazorat.sferaacademy.uz/api/mark/${id}`, {
+  await axios.delete(`http://167.86.121.42:8080/mark/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
 
 const editMark = async ({ mark, formData, token }) => {
   await axios.put(
-    `https://nazorat.sferaacademy.uz/api/mark/${mark.id}`,
+    `http://167.86.121.42:8080/mark/${mark.id}`,
     {
       studentId: mark.studentId,
       homeworkScore: Number(formData.homeworkScore),
@@ -51,7 +51,12 @@ const MarksPage = () => {
     navigate("/login", { replace: true });
   }
 
-  const { data: marks = [], isLoading, isError, error } = useQuery({
+  const {
+    data: marks = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["marks", token],
     queryFn: () => fetchMarks(token),
     retry: false,
@@ -69,6 +74,7 @@ const MarksPage = () => {
     mutationFn: ({ id, token }) => deleteMark({ id, token }),
     onSuccess: () => {
       queryClient.invalidateQueries(["marks", token]);
+      queryClient.invalidateQueries(["top-students", token]);
       toast.success("Baho muvaffaqiyatli o‘chirildi!");
       setShowDeleteModal(false);
     },
@@ -78,10 +84,10 @@ const MarksPage = () => {
   });
 
   const editMutation = useMutation({
-    mutationFn: ({ mark, formData, token }) =>
-      editMark({ mark, formData, token }),
+    mutationFn: ({ mark, formData, token }) => editMark({ mark, formData, token }),
     onSuccess: () => {
       queryClient.invalidateQueries(["marks", token]);
+      queryClient.invalidateQueries(["top-students", token]);
       toast.success("Baho muvaffaqiyatli yangilandi!");
       setShowEditModal(false);
     },
@@ -166,6 +172,7 @@ const MarksPage = () => {
                   : "Noma’lum"}
               </p>
             </div>
+
             <div className="flex gap-3">
               <button
                 onClick={() => {
@@ -181,6 +188,7 @@ const MarksPage = () => {
               >
                 <FaPencilAlt />
               </button>
+
               <button
                 onClick={() => {
                   setSelectedMark(mark);
@@ -231,6 +239,7 @@ const MarksPage = () => {
           </div>
         </div>
       )}
+
       {showEditModal && (
         <div
           className="fixed inset-0 bg-black/50 flex justify-center items-center z-[100]"
@@ -247,6 +256,7 @@ const MarksPage = () => {
               <IoMdCloseCircle />
             </button>
             <h2 className="text-lg font-bold mb-4">Bahoni tahrirlash</h2>
+
             <div className="space-y-3">
               {["homeworkScore", "activityScore", "attendanceScore"].map(
                 (field) => (
@@ -257,14 +267,13 @@ const MarksPage = () => {
                     max="10"
                     placeholder={field}
                     value={formData[field]}
-                    onChange={(e) =>
-                      handleInputChange(field, e.target.value)
-                    }
+                    onChange={(e) => handleInputChange(field, e.target.value)}
                     className="w-full border rounded-lg px-3 py-2"
                   />
                 )
               )}
             </div>
+
             <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={() => setShowEditModal(false)}
@@ -288,4 +297,4 @@ const MarksPage = () => {
   );
 };
 
-export default MarksPage;
+export default MarksPage; 

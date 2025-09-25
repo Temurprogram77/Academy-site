@@ -20,7 +20,7 @@ const formatPhoneNumber = (phone) => {
 
 const token = localStorage.getItem("token");
 const api = axios.create({
-  baseURL: "https://nazorat.sferaacademy.uz/api",
+  baseURL: "http://167.86.121.42:8080",
   headers: {
     "Content-Type": "application/json",
     Authorization: token ? `Bearer ${token}` : "",

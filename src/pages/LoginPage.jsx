@@ -51,7 +51,7 @@ const LoginPage = () => {
   const handleContinue = async () => {
     try {
       const res = await axios.post(
-        `https://nazorat.sferaacademy.uz/api/auth/login?phone=${phone}&password=${password}`
+        `http://167.86.121.42:8080/auth/login?phone=${phone}&password=${password}`
       );
 
       if (res.data.success) {

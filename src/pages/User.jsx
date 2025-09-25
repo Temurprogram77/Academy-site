@@ -34,7 +34,7 @@ function User() {
         return;
       }
       const response = await fetch(
-        "https://nazorat.sferaacademy.uz/api/user/leaderboard",
+        "http://167.86.121.42:8080/user/leaderboard",
         {
           method: "GET",
           headers: {
@@ -72,7 +72,7 @@ function User() {
         navigate("/login");
         return;
       }
-      const response = await fetch("https://nazorat.sferaacademy.uz/api/mark/myMarks", {
+      const response = await fetch("http://167.86.121.42:8080/mark/myMarks", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
