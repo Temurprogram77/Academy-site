@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const getTeacherDashboard = async (token) => {
   const { data } = await axios.get(
-    "http://167.86.121.42:8080/user/teacher-dashboard",
+    "https://nazorat.sferaacademy.uz/api/user/teacher-dashboard",
     {
       headers: { Authorization: `Bearer ${token}` },
     }
@@ -15,7 +15,7 @@ const getTeacherDashboard = async (token) => {
 
 const getTeacherGroups = async ({ queryKey }) => {
   const [token, searchQuery] = queryKey;
-  const { data } = await axios.get("http://167.86.121.42:8080/group", {
+  const { data } = await axios.get("https://nazorat.sferaacademy.uz/api/group", {
     headers: { Authorization: `Bearer ${token}` },
     params: {
       page: 0,

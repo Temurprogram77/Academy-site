@@ -22,7 +22,7 @@ const Dashboard = () => {
 
       try {
         const res = await axios.get(
-          "http://167.86.121.42:8080/user/admin-dashboard",
+          "https://nazorat.sferaacademy.uz/api/user/admin-dashboard",
           {
             headers: {
               Authorization: `Bearer ${token}`,

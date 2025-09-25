@@ -6,7 +6,7 @@ import TopStudent from "../components/TopStudent";
 
 const fetchTeacherDashboard = async (token) => {
   const { data } = await axios.get(
-    "http://167.86.121.42:8080/user/teacher-dashboard",
+    "https://nazorat.sferaacademy.uz/api/user/teacher-dashboard",
     {
       headers: { Authorization: `Bearer ${token}` },
     }

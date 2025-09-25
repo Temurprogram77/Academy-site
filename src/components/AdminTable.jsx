@@ -19,7 +19,7 @@ const AdminTable = () => {
     }
 
     const api = axios.create({
-      baseURL: "http://167.86.121.42:8080",
+      baseURL: "https://nazorat.sferaacademy.uz/api",
       headers: { Authorization: token ? `Bearer ${token}` : "" },
     });
 
