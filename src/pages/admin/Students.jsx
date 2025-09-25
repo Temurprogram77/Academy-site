@@ -53,7 +53,7 @@ const Students = () => {
     fullName: "",
     phone: "",
     password: "",
-    parentPhone: "",
+    parentName: "",
     imgUrl: "",
     groupId: "",
   });
@@ -77,7 +77,7 @@ const Students = () => {
         fullName: "",
         phone: "",
         password: "",
-        parentPhone: "",
+        parentName: "",
         imgUrl: "",
         groupId: "",
       });
@@ -96,7 +96,7 @@ const Students = () => {
 
   const handleAddStudent = (e) => {
     e.preventDefault();
-    if (!form.fullName || !form.phone || !form.password || !form.parentPhone) {
+    if (!form.fullName || !form.phone || !form.password || !form.parentName) {
       toast.error("Barcha maydonlar to‘ldirilishi kerak!");
       return;
     }
@@ -105,7 +105,7 @@ const Students = () => {
       fullName: form.fullName,
       phone: form.phone.replace(/\D/g, ""),
       password: form.password,
-      parentPhone: form.parentPhone.replace(/\D/g, ""),
+      parentName: form.parentName.replace(/\D/g, ""),
       imgUrl: form.imgUrl || "",
       groupId: form.groupId ? Number(form.groupId) : null,
     };
@@ -244,7 +244,7 @@ const Students = () => {
               </p>
               <p>
                 <strong>Parent telefon:</strong>{" "}
-                {formatPhoneNumber(selectedStudent.parentPhone)}
+                {formatPhoneNumber(selectedStudent.parentName)}
               </p>
               <p>
                 <strong>Role:</strong> {selectedStudent.role || "STUDENT"}
@@ -299,8 +299,8 @@ const Students = () => {
               </label>
               <PhoneInput
                 country="uz"
-                value={form.parentPhone}
-                onChange={(value) => handleFormChange("parentPhone", value)}
+                value={form.parentName}
+                onChange={(value) => handleFormChange("parentName", value)}
                 inputClass="w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Parent telefon"
               />

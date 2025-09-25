@@ -107,7 +107,7 @@ const Rooms = () => {
               <h2 className="text-xl font-semibold text-gray-800">
                 {room.name}
               </h2>
-              <p className="text-sm text-gray-500 mt-1">ID: {room.id}</p>
+              <p className="text-sm text-gray-500 mt-1">Xona raqami: {room.id}</p>
             </div>
           ))}
         </div>
@@ -127,29 +127,11 @@ const Rooms = () => {
                 <tbody>
                   <tr className="border-b">
                     <td className="px-4 py-3 font-medium text-gray-700">
-                      Xona ID
+                      Xona raqami
                     </td>
                     <td className="px-4 py-3 text-gray-600">
                       {selectedRoom.id}
                     </td>
-                  </tr>
-                  <tr className="bg-gray-50 border-b">
-                    <td className="px-4 py-3 font-medium text-gray-700">
-                      O‘quvchilar soni
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">?</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="px-4 py-3 font-medium text-gray-700">
-                      O‘qituvchi
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">?</td>
-                  </tr>
-                  <tr className="bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-700">
-                      Guruh nomi
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">?</td>
                   </tr>
                 </tbody>
               </table>

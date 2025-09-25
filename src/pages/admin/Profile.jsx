@@ -8,17 +8,14 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({ fullName: "", phone: "" });
-  const [loading, setLoading] = useState(true); // ✅ loading qo‘shildi
-
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef(null);
   const token = localStorage.getItem("token");
 
   // LocalStorage'dan rasm olish
   useEffect(() => {
     const savedImage = localStorage.getItem("profileImage");
-    if (savedImage) {
-      setImage(savedImage);
-    }
+    if (savedImage) setImage(savedImage);
   }, []);
 
   // API orqali user olish
@@ -34,7 +31,7 @@ const Profile = () => {
           fullName: res.data.data.fullName,
           phone: res.data.data.phone,
         });
-        setLoading(false); // ✅ ma’lumot kelganda loading tugaydi
+        setLoading(false);
       })
       .catch((err) => {
         console.error("User API error:", err);
@@ -43,30 +40,53 @@ const Profile = () => {
   }, [token]);
 
   // Rasm yuklash
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result);
-        localStorage.setItem("profileImage", reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const form = new FormData();
+    form.append("file", file); // API file nomi bilan qabul qiladi
+
+    try {
+      const res = await axios.post(
+        "http://167.86.121.42:8080/api/v1/files/upload",
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // serverdan URL olish (server formatiga qarab o‘zgartiring)
+      const imageUrl = res.data?.data?.url || res.data?.url || "";
+      if (imageUrl) {
+        setImage(imageUrl);
+        localStorage.setItem("profileImage", imageUrl);
+        toast.success("Rasm muvaffaqiyatli yuklandi ✅");
+      } else {
+        toast.error("Rasm URL topilmadi ❌");
+      }
+    } catch (err) {
+      console.error("Upload error:", err.response || err);
+      toast.error("Rasm yuklashda xatolik ❌");
     }
   };
 
   // Input handler
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
-  // PUT orqali update
+  // User update
   const handleSave = async () => {
     try {
       const form = new FormData();
       form.append("fullName", formData.fullName);
       form.append("phone", formData.phone);
-      form.append("image", fileInputRef.current.files[0]); // faylni jo'natish
+      if (fileInputRef.current.files[0]) {
+        form.append("file", fileInputRef.current.files[0]);
+      }
 
       await axios.put("http://167.86.121.42:8080/user", form, {
         headers: {
@@ -78,23 +98,20 @@ const Profile = () => {
       toast.success("Ma'lumot muvaffaqiyatli yangilandi ✅");
       setEditing(false);
     } catch (err) {
-      console.error("Update error:", err);
+      console.error("Update error:", err.response || err);
       toast.error("Xatolik yuz berdi ❌");
     }
   };
 
-  // Agar loading bo‘lsa loader qaytaradi
-  if (loading) {
+  if (loading)
     return (
       <div className="mt-80 flex items-center justify-center bg-[#F3F4F6]">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#208a00]"></div>
       </div>
     );
-  }
 
   return (
     <div className="p-8 space-y-4 bg-white m-6 rounded-xl">
-      {/* Toaster */}
       <Toaster position="top-right" reverseOrder={false} />
 
       <div className="w-full flex items-center justify-between gap-10">
@@ -149,9 +166,6 @@ const Profile = () => {
                   <p className="text-gray-600">{user.role}</p>
                 </div>
               </div>
-              <div className="w-full py-2 rounded-xl text-center bg-[#5DB445] text-white font-semibold cursor-pointer">
-                Ko'proq ma'lumot
-              </div>
               <div
                 className="w-full py-2 rounded-xl text-center bg-[#5DB445] text-white font-semibold cursor-pointer"
                 onClick={() => setEditing(true)}
@@ -170,7 +184,7 @@ const Profile = () => {
         <>
           <div
             onClick={() => setEditing(false)}
-            className="fixed -top-5 inset-0 bg-black/40 flex items-center justify-center z-40"
+            className="fixed -top-5 left-0 inset-0 bg-black/40 flex items-center justify-center z-40"
           ></div>
           <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl p-6 w-[400px] shadow-lg space-y-4">
             <div className="flex justify-between items-center">

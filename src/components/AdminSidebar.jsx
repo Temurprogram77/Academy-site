@@ -34,7 +34,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
         onClick={() => setIsOpen(false)}
       ></div>
       <div
-        className={`bg-white lg:overflow-hidden overflow-y-scroll h-screen shadow-md fixed top-0 left-0 z-50 md:w-72 w-full transform transition-transform duration-300
+        className={`bg-white z-30 lg:overflow-hidden overflow-y-scroll h-screen shadow-md fixed top-0 left-0 z-50 md:w-72 w-full transform transition-transform duration-300
                   ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
                   } lg:translate-x-0 lg:static lg:block`}

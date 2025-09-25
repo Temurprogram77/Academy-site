@@ -20,7 +20,7 @@ const TeacherSideBar = ({ isOpen, onClose }) => {
   return (
     <aside
       className={`
-        fixed top-0 left-0 h-full bg-white text-white p-6 flex flex-col transform transition-transform duration-300 z-50
+        fixed top-0 left-0 h-full bg-white text-white p-6 flex flex-col transform transition-transform duration-300 z-30
         ${isOpen ? "translate-x-0 w-full md:w-[20rem]" : "-translate-x-full w-full md:w-[20rem]"}
         md:relative md:translate-x-0
       `}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { TiPlusOutline } from "react-icons/ti";
 import { FiX } from "react-icons/fi";
@@ -34,6 +34,7 @@ const Teams = () => {
     teacherId: "",
   });
   const [filteredTeams, setFilteredTeams] = useState([]);
+  const [teachers, setTeachers] = useState([]);
 
   useEffect(() => {
     if (!token) {
@@ -41,9 +42,9 @@ const Teams = () => {
       navigate("/login");
     }
   }, [token, navigate]);
-  const [teachers, setTeachers] = useState([]);
 
-  const fetchTeachers = async () => {
+  // Fetch teachers
+  const fetchTeachers = useCallback(async () => {
     try {
       const res = await api.get("/user/search?role=TEACHER&page=0&size=10", {
         headers: { Authorization: `Bearer ${token}` },
@@ -53,12 +54,13 @@ const Teams = () => {
       console.error(err);
       toast.error("❌ Ustozlar yuklanmadi!");
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) fetchTeachers();
-  }, [token]);
+  }, [token, fetchTeachers]);
 
+  // React Query fetch
   // React Query fetch
   const fetchTeams = async () => {
     const groupsRes = await api.get("/group/all", {
@@ -73,9 +75,19 @@ const Teams = () => {
     };
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(["teams"], fetchTeams);
-  const teams = data?.teams ?? [];
-  const rooms = data?.rooms ?? [];
+  // useQuery
+  const { data, isLoading, isError, refetch } = useQuery(
+    ["teams"],
+    fetchTeams,
+    {
+      staleTime: 1000 * 60 * 5,
+      cacheTime: 1000 * 60 * 10,
+    }
+  );
+
+  // useMemo
+  const teams = useMemo(() => data?.teams ?? [], [data?.teams]);
+  const rooms = useMemo(() => data?.rooms ?? [], [data?.rooms]);
 
   // Search debouncing
   useEffect(() => {
@@ -109,8 +121,8 @@ const Teams = () => {
   };
 
   const handleTimeInput = (e) => {
-    let value = e.target.value.replace(/\D/g, ""); // faqat raqam qoldir
-    if (value.length > 4) value = value.slice(0, 4); // 4 dan ortiq raqam yo‘q
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 4) value = value.slice(0, 4);
     if (value.length >= 3) {
       value = value.slice(0, 2) + ":" + value.slice(2);
     }
@@ -120,20 +132,18 @@ const Teams = () => {
   const handleAddTeam = async (e) => {
     e.preventDefault();
 
-    // form validation
     if (!form.name.trim()) return toast.error("⚠ Guruh nomini kiriting!");
     if (!form.roomId) return toast.error("⚠ Xona tanlang!");
-    if (!form.teacherId) return toast.error("⚠ Ustoz ID sini kiriting!");
+    if (!form.teacherId) return toast.error("⚠ Ustoz tanlang!");
     if (!form.startTime || !form.endTime)
       return toast.error("⚠ Dars vaqtini to‘liq kiriting!");
     if (form.weekDays.length === 0)
       return toast.error("⚠ Haftaning kunlarini tanlang!");
 
-    // payload tayyorlash
     const payload = {
       name: form.name,
-      startTime: form.startTime, // HH:mm format
-      endTime: form.endTime, // HH:mm format
+      startTime: form.startTime,
+      endTime: form.endTime,
       weekDays: form.weekDays,
       teacherId: Number(form.teacherId),
       roomId: Number(form.roomId),
@@ -180,6 +190,7 @@ const Teams = () => {
   return (
     <div className="px-6">
       <Toaster position="top-right" />
+
       <div className="flex items-center justify-between mt-6 mb-4">
         <button
           onClick={() => setAddModal(true)}
@@ -196,6 +207,7 @@ const Teams = () => {
         />
       </div>
 
+      {/* Table */}
       <table className="min-w-full divide-y divide-gray-200 my-10 border shadow-lg rounded-xl overflow-hidden">
         <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
           <tr>
@@ -250,7 +262,7 @@ const Teams = () => {
         </tbody>
       </table>
 
-      {/* Ko‘proq modal */}
+      {/* Team modal */}
       {modalOpen && selectedTeam && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-xl w-96 relative shadow-2xl">
@@ -322,9 +334,9 @@ const Teams = () => {
                 type="text"
                 name="startTime"
                 placeholder="00:00"
-                value={form.startTime} // bu yerda replace qilish shart emas
+                value={form.startTime}
                 onChange={handleTimeInput}
-                maxLength={5} // HH:mm bo‘lishi uchun 5
+                maxLength={5}
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
@@ -334,45 +346,43 @@ const Teams = () => {
                 placeholder="00:00"
                 value={form.endTime}
                 onChange={handleTimeInput}
-                maxLength={5} // HH:mm
+                maxLength={5}
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
 
-              <div className="flex flex-wrap gap-2">
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {weekOptions.map((day) => (
-                      <label
-                        key={day}
-                        className={`flex items-center cursor-pointer transition-all duration-200
-        rounded-full px-3 py-1 text-sm font-medium
-        border border-green-400
-        ${
-          form.weekDays.includes(day)
-            ? "bg-green-500 text-white scale-105"
-            : "bg-white text-green-700"
-        }
-        hover:bg-green-400 hover:text-white hover:scale-105`}
-                      >
-                        <input
-                          type="checkbox"
-                          value={day}
-                          checked={form.weekDays.includes(day)}
-                          onChange={handleWeekDaysChange}
-                          className="hidden"
-                        />
-                        {day.slice(0, 3)}
-                      </label>
-                    ))}
-                  </div>
-                </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {weekOptions.map((day) => (
+                  <label
+                    key={day}
+                    className={`flex items-center cursor-pointer transition-all duration-200 rounded-full px-3 py-1 text-sm font-medium border border-green-400 ${
+                      form.weekDays.includes(day)
+                        ? "bg-green-500 text-white scale-105"
+                        : "bg-white text-green-700"
+                    } hover:bg-green-400 hover:text-white hover:scale-105`}
+                  >
+                    <input
+                      type="checkbox"
+                      value={day}
+                      checked={form.weekDays.includes(day)}
+                      onChange={handleWeekDaysChange}
+                      className="hidden"
+                    />
+                    {day.slice(0, 3)}
+                  </label>
+                ))}
               </div>
+
               <select
                 name="teacherId"
                 value={form.teacherId}
-                onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    teacherId: e.target.value ? Number(e.target.value) : "",
+                  }))
+                }
+                className="border bg-transparent px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               >
                 <option value="">Ustoz tanlang</option>
@@ -386,8 +396,13 @@ const Teams = () => {
               <select
                 name="roomId"
                 value={form.roomId}
-                onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    roomId: e.target.value ? Number(e.target.value) : "",
+                  }))
+                }
+                className="bg-transparent border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               >
                 <option value="">Xona tanlang</option>
@@ -397,6 +412,7 @@ const Teams = () => {
                   </option>
                 ))}
               </select>
+
               <button
                 type="submit"
                 className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 shadow-md"
