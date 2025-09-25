@@ -25,6 +25,8 @@ const Teams = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [addModal, setAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     startTime: "",
@@ -33,8 +35,10 @@ const Teams = () => {
     roomId: "",
     teacherId: "",
   });
+
   const [filteredTeams, setFilteredTeams] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [rooms, setRooms] = useState([]);
 
   useEffect(() => {
     if (!token) {
@@ -43,7 +47,6 @@ const Teams = () => {
     }
   }, [token, navigate]);
 
-  // Fetch teachers
   const fetchTeachers = useCallback(async () => {
     try {
       const res = await api.get("/user/search?role=TEACHER&page=0&size=10", {
@@ -60,8 +63,6 @@ const Teams = () => {
     if (token) fetchTeachers();
   }, [token, fetchTeachers]);
 
-  // React Query fetch
-  // React Query fetch
   const fetchTeams = async () => {
     const groupsRes = await api.get("/group/all", {
       headers: { Authorization: `Bearer ${token}` },
@@ -69,33 +70,29 @@ const Teams = () => {
     const roomsRes = await api.get("/room", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return {
-      teams: groupsRes?.data?.data ?? [],
-      rooms: roomsRes?.data?.data ?? [],
-    };
+    setRooms(roomsRes?.data?.data ?? []);
+    return groupsRes?.data?.data ?? [];
   };
 
-  // useQuery
-  const { data, isLoading, isError, refetch } = useQuery(
-    ["teams"],
-    fetchTeams,
-    {
-      staleTime: 1000 * 60 * 5,
-      cacheTime: 1000 * 60 * 10,
-    }
-  );
+  const {
+    data: teamsData,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery(["teams"], fetchTeams, {
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 10,
+  });
 
-  // useMemo
-  const teams = useMemo(() => data?.teams ?? [], [data?.teams]);
-  const rooms = useMemo(() => data?.rooms ?? [], [data?.rooms]);
+  const teams = useMemo(() => teamsData ?? [], [teamsData]);
 
-  // Search debouncing
   useEffect(() => {
     const delay = setTimeout(() => {
-      const filtered = teams.filter((t) =>
-        t.name?.toLowerCase().includes(search.toLowerCase())
+      setFilteredTeams(
+        teams.filter((t) =>
+          t.name?.toLowerCase().includes(search.toLowerCase())
+        )
       );
-      setFilteredTeams(filtered);
     }, 300);
     return () => clearTimeout(delay);
   }, [search, teams]);
@@ -105,55 +102,18 @@ const Teams = () => {
     setModalOpen(true);
   };
 
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleWeekDaysChange = (e) => {
-    const value = e.target.value;
-    setForm((prev) => ({
-      ...prev,
-      weekDays: prev.weekDays.includes(value)
-        ? prev.weekDays.filter((d) => d !== value)
-        : [...prev.weekDays, value],
-    }));
-  };
-
-  const handleTimeInput = (e) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 4) value = value.slice(0, 4);
-    if (value.length >= 3) {
-      value = value.slice(0, 2) + ":" + value.slice(2);
-    }
-    setForm((prev) => ({ ...prev, [e.target.name]: value }));
-  };
-
+  // Add team
   const handleAddTeam = async (e) => {
     e.preventDefault();
-
-    if (!form.name.trim()) return toast.error("⚠ Guruh nomini kiriting!");
-    if (!form.roomId) return toast.error("⚠ Xona tanlang!");
-    if (!form.teacherId) return toast.error("⚠ Ustoz tanlang!");
-    if (!form.startTime || !form.endTime)
-      return toast.error("⚠ Dars vaqtini to‘liq kiriting!");
-    if (form.weekDays.length === 0)
-      return toast.error("⚠ Haftaning kunlarini tanlang!");
-
     const payload = {
-      name: form.name,
-      startTime: form.startTime,
-      endTime: form.endTime,
-      weekDays: form.weekDays,
+      ...form,
       teacherId: Number(form.teacherId),
       roomId: Number(form.roomId),
     };
-
     try {
       const res = await api.post("/group", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (res.status === 200 || res.status === 201) {
         toast.success("✅ Guruh qo‘shildi!");
         setAddModal(false);
@@ -166,22 +126,80 @@ const Teams = () => {
           teacherId: "",
         });
         refetch();
-      } else {
-        toast.error("❌ Guruh qo‘shilmadi! Status: " + res.status);
-      }
+      } else toast.error("❌ Guruh qo‘shilmadi!");
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       toast.error("❌ Guruh qo‘shishda xatolik!");
+    }
+  };
+
+  // Delete team
+  const handleDeleteTeam = async (id) => {
+    if (!window.confirm("Rostdan ham guruhni o‘chirmoqchimisiz?")) return;
+    try {
+      await api.delete(`/group/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("✅ Guruh o‘chirildi!");
+      setModalOpen(false);
+      refetch();
+    } catch (err) {
+      console.error(err);
+      toast.error("❌ Guruh o‘chirishda xatolik!");
+    }
+  };
+
+  // Open edit modal
+  const handleOpenEdit = () => {
+    if (!selectedTeam) return;
+    setForm({
+      name: selectedTeam.name,
+      startTime: selectedTeam.startTime,
+      endTime: selectedTeam.endTime,
+      weekDays: selectedTeam.weekDays || [],
+      teacherId: selectedTeam.teacherId,
+      roomId: selectedTeam.roomId,
+    });
+    setEditModal(true);
+    setModalOpen(false);
+  };
+
+  // Update team
+  const handleUpdateTeam = async (e) => {
+    e.preventDefault();
+    if (!selectedTeam) return;
+    const payload = {
+      ...form,
+      teacherId: Number(form.teacherId),
+      roomId: Number(form.roomId),
+    };
+    try {
+      await api.put(`/group/${selectedTeam.id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("✅ Guruh yangilandi!");
+      setEditModal(false);
+      setForm({
+        name: "",
+        startTime: "",
+        endTime: "",
+        weekDays: [],
+        roomId: "",
+        teacherId: "",
+      });
+      refetch();
+    } catch (err) {
+      console.error(err);
+      toast.error("❌ Guruh yangilashda xatolik!");
     }
   };
 
   if (isLoading)
     return (
-      <div className="mt-40 flex items-center justify-center">
+      <div className="mt-40 flex justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
       </div>
     );
-
   if (isError)
     return (
       <div className="text-red-500 p-6">Ma’lumotlarni yuklashda xatolik!</div>
@@ -190,7 +208,6 @@ const Teams = () => {
   return (
     <div className="px-6">
       <Toaster position="top-right" />
-
       <div className="flex items-center justify-between mt-6 mb-4">
         <button
           onClick={() => setAddModal(true)}
@@ -207,7 +224,6 @@ const Teams = () => {
         />
       </div>
 
-      {/* Table */}
       <table className="min-w-full divide-y divide-gray-200 my-10 border shadow-lg rounded-xl overflow-hidden">
         <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
           <tr>
@@ -275,11 +291,9 @@ const Teams = () => {
             <h2 className="text-xl font-semibold mb-4 text-green-600">
               {selectedTeam.name}
             </h2>
-            {selectedTeam.studentCount !== undefined && (
-              <p>
-                <strong>O‘quvchilar soni:</strong> {selectedTeam.studentCount}
-              </p>
-            )}
+            <p>
+              <strong>O‘quvchilar soni:</strong> {selectedTeam.studentCount}
+            </p>
             {selectedTeam.roomName && (
               <p>
                 <strong>Xona:</strong> {selectedTeam.roomName}
@@ -303,126 +317,190 @@ const Teams = () => {
                 <strong>Ustoz:</strong> {selectedTeam.teacherName}
               </p>
             )}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => handleDeleteTeam(selectedTeam.id)}
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+              >
+                O‘chirish
+              </button>
+              <button
+                onClick={handleOpenEdit}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+              >
+                Tahrirlash
+              </button>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
+              >
+                Yopish
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Add Team modal */}
       {addModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-2xl">
-            <button
-              onClick={() => setAddModal(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-            >
-              <FiX size={24} />
-            </button>
-            <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
-              Yangi guruh qo‘shish
-            </h2>
-            <form className="flex flex-col gap-3" onSubmit={handleAddTeam}>
-              <input
-                type="text"
-                name="name"
-                placeholder="Guruh nomi"
-                value={form.name}
-                onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
-              <input
-                type="text"
-                name="startTime"
-                placeholder="00:00"
-                value={form.startTime}
-                onChange={handleTimeInput}
-                maxLength={5}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
-              <input
-                type="text"
-                name="endTime"
-                placeholder="00:00"
-                value={form.endTime}
-                onChange={handleTimeInput}
-                maxLength={5}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
-
-              <div className="flex flex-wrap gap-2 mt-2">
-                {weekOptions.map((day) => (
-                  <label
-                    key={day}
-                    className={`flex items-center cursor-pointer transition-all duration-200 rounded-full px-3 py-1 text-sm font-medium border border-green-400 ${
-                      form.weekDays.includes(day)
-                        ? "bg-green-500 text-white scale-105"
-                        : "bg-white text-green-700"
-                    } hover:bg-green-400 hover:text-white hover:scale-105`}
-                  >
-                    <input
-                      type="checkbox"
-                      value={day}
-                      checked={form.weekDays.includes(day)}
-                      onChange={handleWeekDaysChange}
-                      className="hidden"
-                    />
-                    {day.slice(0, 3)}
-                  </label>
-                ))}
-              </div>
-
-              <select
-                name="teacherId"
-                value={form.teacherId}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    teacherId: e.target.value ? Number(e.target.value) : "",
-                  }))
-                }
-                className="border bg-transparent px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              >
-                <option value="">Ustoz tanlang</option>
-                {teachers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.fullName}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                name="roomId"
-                value={form.roomId}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    roomId: e.target.value ? Number(e.target.value) : "",
-                  }))
-                }
-                className="bg-transparent border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              >
-                <option value="">Xona tanlang</option>
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name}
-                  </option>
-                ))}
-              </select>
-
-              <button
-                type="submit"
-                className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 shadow-md"
-              >
-                Qo‘shish
-              </button>
-            </form>
-          </div>
-        </div>
+        <TeamFormModal
+          title="Yangi guruh qo‘shish"
+          form={form}
+          setForm={setForm}
+          teachers={teachers}
+          rooms={rooms}
+          onClose={() => setAddModal(false)}
+          onSubmit={handleAddTeam}
+        />
       )}
+
+      {/* Edit Team modal */}
+      {editModal && (
+        <TeamFormModal
+          title="Guruhni tahrirlash"
+          form={form}
+          setForm={setForm}
+          teachers={teachers}
+          rooms={rooms}
+          onClose={() => setEditModal(false)}
+          onSubmit={handleUpdateTeam}
+        />
+      )}
+    </div>
+  );
+};
+
+const TeamFormModal = ({
+  title,
+  form,
+  setForm,
+  teachers,
+  rooms,
+  onClose,
+  onSubmit,
+}) => {
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleWeekDaysChange = (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({
+      ...prev,
+      weekDays: prev.weekDays.includes(value)
+        ? prev.weekDays.filter((d) => d !== value)
+        : [...prev.weekDays, value],
+    }));
+  };
+
+  const handleTimeInput = (e) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 4) value = value.slice(0, 4);
+    if (value.length >= 3) value = value.slice(0, 2) + ":" + value.slice(2);
+    setForm((prev) => ({ ...prev, [e.target.name]: value }));
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white p-6 rounded-xl w-full max-w-md relative shadow-2xl">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+        >
+          <FiX size={24} />
+        </button>
+        <h2 className="text-2xl font-semibold mb-4 text-center text-gray-700">
+          {title}
+        </h2>
+        <form className="flex flex-col gap-3" onSubmit={onSubmit}>
+          <input
+            type="text"
+            name="name"
+            placeholder="Guruh nomi"
+            value={form.name}
+            onChange={handleFormChange}
+            className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          />
+          <input
+            type="text"
+            name="startTime"
+            placeholder="00:00"
+            value={form.startTime}
+            onChange={handleTimeInput}
+            maxLength={5}
+            className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          />
+          <input
+            type="text"
+            name="endTime"
+            placeholder="00:00"
+            value={form.endTime}
+            onChange={handleTimeInput}
+            maxLength={5}
+            className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {weekOptions.map((day) => (
+              <label
+                key={day}
+                className={`flex items-center cursor-pointer transition-all duration-200 rounded-full px-3 py-1 text-sm font-medium border border-green-400 ${
+                  form.weekDays.includes(day)
+                    ? "bg-green-500 text-white scale-105"
+                    : "bg-white text-green-700"
+                } hover:bg-green-400 hover:text-white hover:scale-105`}
+              >
+                <input
+                  type="checkbox"
+                  value={day}
+                  checked={form.weekDays.includes(day)}
+                  onChange={handleWeekDaysChange}
+                  className="hidden"
+                />
+                {day.slice(0, 3)}
+              </label>
+            ))}
+          </div>
+          <select
+            name="teacherId"
+            value={form.teacherId}
+            onChange={handleFormChange}
+            className="border bg-transparent px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          >
+            <option value="">Ustoz tanlang</option>
+            {teachers.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.fullName}
+              </option>
+            ))}
+          </select>
+          <select
+            name="roomId"
+            value={form.roomId}
+            onChange={handleFormChange}
+            className="bg-transparent border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          >
+            <option value="">Xona tanlang</option>
+            {rooms.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 shadow-md"
+          >
+            {title.includes("qo‘shish") ? "Qo‘shish" : "Yangilash"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
