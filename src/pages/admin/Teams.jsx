@@ -50,20 +50,15 @@ const Teams = () => {
     const roomsRes = await api.get("/room", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const teachersRes = await api.get("/teacher", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
     return {
       teams: groupsRes?.data?.data ?? [],
       rooms: roomsRes?.data?.data ?? [],
-      teachers: teachersRes?.data?.data ?? [],
     };
   };
 
   const { data, isLoading, isError, refetch } = useQuery(["teams"], fetchTeams);
   const teams = data?.teams ?? [];
   const rooms = data?.rooms ?? [];
-  const teachers = data?.teachers ?? [];
 
   // Search debouncing
   useEffect(() => {
@@ -98,38 +93,46 @@ const Teams = () => {
 
   const handleAddTeam = async (e) => {
     e.preventDefault();
+
+    // form validation
     if (!form.name.trim()) return toast.error("⚠ Guruh nomini kiriting!");
     if (!form.roomId) return toast.error("⚠ Xona tanlang!");
-    if (!form.teacherId) return toast.error("⚠ Ustoz tanlang!");
+    if (!form.teacherId) return toast.error("⚠ Ustoz ID sini kiriting!");
+    if (!form.startTime || !form.endTime) return toast.error("⚠ Dars vaqtini to‘liq kiriting!");
+    if (form.weekDays.length === 0) return toast.error("⚠ Haftaning kunlarini tanlang!");
 
+    // payload tayyorlash
     const payload = {
       name: form.name,
-      startTime: form.startTime,
-      endTime: form.endTime,
+      startTime: form.startTime + ":00", // API uchun format HH:mm:ss
+      endTime: form.endTime + ":00",
       weekDays: form.weekDays,
       teacherId: Number(form.teacherId),
       roomId: Number(form.roomId),
     };
 
-    console.log("Sending payload:", payload);
-
     try {
-      await api.post("/group", payload, {
+      const res = await api.post("/group", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("✅ Guruh qo‘shildi!");
-      setAddModal(false);
-      setForm({
-        name: "",
-        startTime: "",
-        endTime: "",
-        weekDays: [],
-        roomId: "",
-        teacherId: "",
-      });
-      refetch();
+
+      if (res.status === 200 || res.status === 201) {
+        toast.success("✅ Guruh qo‘shildi!");
+        setAddModal(false);
+        setForm({
+          name: "",
+          startTime: "",
+          endTime: "",
+          weekDays: [],
+          roomId: "",
+          teacherId: "",
+        });
+        refetch();
+      } else {
+        toast.error("❌ Guruh qo‘shilmadi! Status: " + res.status);
+      }
     } catch (err) {
-      console.error(err);
+      console.error(err.response?.data || err);
       toast.error("❌ Guruh qo‘shishda xatolik!");
     }
   };
@@ -140,6 +143,7 @@ const Teams = () => {
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
       </div>
     );
+
   if (isError)
     return (
       <div className="text-red-500 p-6">Ma’lumotlarni yuklashda xatolik!</div>
@@ -315,20 +319,15 @@ const Teams = () => {
                   </label>
                 ))}
               </div>
-              <select
+              <input
+                type="number"
                 name="teacherId"
+                placeholder="Ustoz ID"
                 value={form.teacherId}
                 onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
-              >
-                <option value="">Ustoz tanlang</option>
-                {teachers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+              />
               <select
                 name="roomId"
                 value={form.roomId}
