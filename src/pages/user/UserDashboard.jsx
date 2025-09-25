@@ -11,7 +11,6 @@ export default function UserDashboard() {
   const [selectedMark, setSelectedMark] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Dashboard ma'lumotlari
   const fetchDashboard = async () => {
     const res = await axios.get(
       "http://167.86.121.42:8080/user/user-dashboard",
@@ -22,7 +21,6 @@ export default function UserDashboard() {
     return res.data.data;
   };
 
-  // Oxirgi 3 baho
   const fetchMarks = async () => {
     const res = await axios.get("http://167.86.121.42:8080/mark/myMarks", {
       headers: { Authorization: `Bearer ${token}` },
@@ -30,7 +28,6 @@ export default function UserDashboard() {
     return res.data.data?.slice(-3) || [];
   };
 
-  // Leaderboard
   const fetchLeaderboard = async () => {
     const res = await axios.get("http://167.86.121.42:8080/user/leaderboard", {
       headers: { Authorization: `Bearer ${token}` },
@@ -123,7 +120,11 @@ export default function UserDashboard() {
                 <FaStar className="text-blue-500" /> Umumiy Ball
               </div>
             }
-          ></Card>
+          >
+            <p className="text-2xl font-bold text-gray-800">
+              {dashboard?.score}
+            </p>
+          </Card>
         </Col>
       </Row>
 
@@ -160,7 +161,7 @@ export default function UserDashboard() {
                 className="shadow-lg rounded-2xl transition-all hover:shadow-2xl"
                 style={getCardStyle(student.level)}
                 title={student.fullName}
-                headStyle={{ color: "#fff", fontWeight: "bold" }}
+                styles={{ header: { color: "#fff", fontWeight: "bold" } }}
               >
                 <p className="text-3xl font-bold text-center">
                   O'rni: {student.rank}

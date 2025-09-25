@@ -17,19 +17,16 @@ export default function UserPanel() {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         isMobile={isMobile}
       />
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col">
         <UserNavbar />
 
         <main className="flex-1 p-4 bg-gray-100 overflow-y-auto">
-          {/* Mobil uchun burger tugma */}
           {isMobile && (
             <div className="flex items-center mb-4">
               <button
