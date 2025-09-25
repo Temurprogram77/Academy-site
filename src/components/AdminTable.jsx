@@ -11,13 +11,6 @@ const AdminTable = () => {
 
   const token = localStorage.getItem("token");
 
-  const api = axios.create({
-    baseURL: "http://167.86.121.42:8080",
-    headers: {
-      Authorization: token ? `Bearer ${token}` : "",
-    },
-  });
-
   useEffect(() => {
     if (!token) {
       console.error("Token topilmadi, login sahifasiga yo'naltiriladi.");
@@ -25,7 +18,11 @@ const AdminTable = () => {
       return;
     }
 
-    // Students from topStudents API
+    const api = axios.create({
+      baseURL: "http://167.86.121.42:8080",
+      headers: { Authorization: token ? `Bearer ${token}` : "" },
+    });
+
     api
       .get("/user/topStudents")
       .then((res) => {
@@ -33,24 +30,21 @@ const AdminTable = () => {
       })
       .catch((err) => console.error("Leaderboard error:", err));
 
-    // Groups
     api
       .get("/group")
       .then((res) => setGroups(res.data.data || []))
       .catch((err) => console.error("Groups error:", err));
 
-    // Rooms
     api
       .get("/room")
       .then((res) => setRooms(res.data.data || []))
       .catch((err) => console.error("Rooms error:", err));
 
-    // Teachers
     api
       .get("/user/search?role=TEACHER&page=0&size=10")
       .then((res) => setTeachers(res?.data?.data?.body || []))
       .catch((err) => console.error("Teachers error:", err));
-  }, [token, navigate,api]);
+  }, [token, navigate]);
 
   const getLevelColor = (level) => {
     switch (level) {

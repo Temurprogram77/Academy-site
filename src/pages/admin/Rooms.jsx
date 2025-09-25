@@ -20,14 +20,13 @@ const Rooms = () => {
 
   const queryClient = useQueryClient();
 
-  // React Query orqali ma'lumotlarni olish va cache qilish
   const {
     data: rooms = [],
     isLoading,
     error,
   } = useQuery(["rooms"], fetchRooms, {
-    staleTime: 1000 * 60 * 5, // 5 daqiqa cache
-    cacheTime: 1000 * 60 * 10, // 10 daqiqa umumiy cache
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 10,
   });
 
   const filteredRooms = rooms.filter((room) =>
@@ -38,7 +37,7 @@ const Rooms = () => {
     setSearchTerm(e.target.value);
   };
 
-  // Xona qo‘shish
+  // Xona qo‘shish (query param orqali)
   const handleAddRoom = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -49,15 +48,17 @@ const Rooms = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://167.86.121.42:8080/room",
-        { name: name.trim() },
+        `http://167.86.121.42:8080/room?name=${encodeURIComponent(
+          name.trim()
+        )}`,
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Yangi xona qo‘shildi!");
       setAddModal(false);
       setName("");
-      queryClient.invalidateQueries(["rooms"]); // Cache yangilanadi
+      queryClient.invalidateQueries(["rooms"]);
     } catch (err) {
       console.error("Error adding room:", err);
       toast.error("Xona qo‘shishda xatolik yuz berdi!");

@@ -4,6 +4,7 @@ import { TiPlusOutline } from "react-icons/ti";
 import { FiX } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const weekOptions = [
   "MONDAY",
@@ -14,11 +15,12 @@ const weekOptions = [
   "SATURDAY",
 ];
 
-const api = axios.create({
-  baseURL: "http://167.86.121.42:8080",
-});
+const api = axios.create({ baseURL: "http://167.86.121.42:8080" });
 
 const Teams = () => {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
@@ -31,57 +33,48 @@ const Teams = () => {
     roomId: "",
     teacherId: "",
   });
+  const [filteredTeams, setFilteredTeams] = useState([]);
 
-  const token = localStorage.getItem("token");
+  useEffect(() => {
+    if (!token) {
+      toast.error("❌ Token topilmadi.");
+      navigate("/login");
+    }
+  }, [token, navigate]);
 
   // React Query fetch
-  const fetchTeams = async ({ queryKey }) => {
-    const [searchQuery] = queryKey;
-    const [groupsRes, roomsRes] = await Promise.all([
-      api.get(`/group?name=${searchQuery}&page=0&size=50`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      api.get("/room", { headers: { Authorization: `Bearer ${token}` } }),
-    ]);
-
-    const groupsArr = groupsRes?.data?.data?.body ?? [];
-    const roomsArr = roomsRes?.data?.data ?? [];
-
-    const detailedGroups = await Promise.all(
-      groupsArr.map(async (g) => {
-        try {
-          const res = await api.get(`/group/${g.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          return res.data?.data || g;
-        } catch (err) {
-          console.error(`Guruh ${g.id} ma’lumotini olishda xatolik:`, err);
-          return g;
-        }
-      })
-    );
-
-    return { teams: detailedGroups, rooms: roomsArr };
+  const fetchTeams = async () => {
+    const groupsRes = await api.get("/group/all", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const roomsRes = await api.get("/room", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const teachersRes = await api.get("/teacher", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return {
+      teams: groupsRes?.data?.data ?? [],
+      rooms: roomsRes?.data?.data ?? [],
+      teachers: teachersRes?.data?.data ?? [],
+    };
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ["teams", search.trim()],
-    fetchTeams,
-    {
-      staleTime: 1000 * 60 * 5, // 5 daqiqa cache
-      cacheTime: 1000 * 60 * 10, // 10 daqiqa
-      keepPreviousData: true,
-    }
-  );
-
-  const teams = data?.teams || [];
-  const rooms = data?.rooms || [];
+  const { data, isLoading, isError, refetch } = useQuery(["teams"], fetchTeams);
+  const teams = data?.teams ?? [];
+  const rooms = data?.rooms ?? [];
+  const teachers = data?.teachers ?? [];
 
   // Search debouncing
   useEffect(() => {
-    const delay = setTimeout(() => refetch(), 500);
+    const delay = setTimeout(() => {
+      const filtered = teams.filter((t) =>
+        t.name?.toLowerCase().includes(search.toLowerCase())
+      );
+      setFilteredTeams(filtered);
+    }, 300);
     return () => clearTimeout(delay);
-  }, [search, refetch]);
+  }, [search, teams]);
 
   const openTeamModal = (team) => {
     setSelectedTeam(team);
@@ -107,21 +100,23 @@ const Teams = () => {
     e.preventDefault();
     if (!form.name.trim()) return toast.error("⚠ Guruh nomini kiriting!");
     if (!form.roomId) return toast.error("⚠ Xona tanlang!");
-    if (!form.teacherId) return toast.error("⚠ Ustoz ID sini kiriting!");
+    if (!form.teacherId) return toast.error("⚠ Ustoz tanlang!");
+
+    const payload = {
+      name: form.name,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      weekDays: form.weekDays,
+      teacherId: Number(form.teacherId),
+      roomId: Number(form.roomId),
+    };
+
+    console.log("Sending payload:", payload);
 
     try {
-      await api.post(
-        "/group",
-        {
-          name: form.name,
-          startTime: form.startTime,
-          endTime: form.endTime,
-          weekDays: form.weekDays,
-          teacherId: Number(form.teacherId),
-          roomId: Number(form.roomId),
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/group", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("✅ Guruh qo‘shildi!");
       setAddModal(false);
       setForm({
@@ -146,12 +141,13 @@ const Teams = () => {
       </div>
     );
   if (isError)
-    return <div className="text-red-500">Ma’lumotlarni yuklashda xatolik!</div>;
+    return (
+      <div className="text-red-500 p-6">Ma’lumotlarni yuklashda xatolik!</div>
+    );
 
   return (
     <div className="px-6">
       <Toaster position="top-right" />
-
       <div className="flex items-center justify-between mt-6 mb-4">
         <button
           onClick={() => setAddModal(true)}
@@ -171,51 +167,33 @@ const Teams = () => {
       <table className="min-w-full divide-y divide-gray-200 my-10 border shadow-lg rounded-xl overflow-hidden">
         <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase">
               Guruh nomi
             </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase">
               O‘quvchilar soni
             </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Xona
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Dars vaqti
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Kunlari
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Ustoz ID
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase">
+              Ustoz
             </th>
             <th className="px-6 py-3"></th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {teams.length > 0 ? (
-            teams.map((team, idx) => (
+          {filteredTeams.length > 0 ? (
+            filteredTeams.map((team, idx) => (
               <tr
                 key={team.id || idx}
                 className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
               >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   {team.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {team.studentCount ?? 0}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {team.roomName || "-"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {team.startTime} - {team.endTime}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {team.weekDays?.join(", ") || "-"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {team.teacherId || "-"}
+                  {team.teacherName || "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
@@ -230,7 +208,7 @@ const Teams = () => {
           ) : (
             <tr>
               <td
-                colSpan="7"
+                colSpan="4"
                 className="text-center px-6 py-4 text-sm text-gray-500"
               >
                 Hech qanday guruh topilmadi
@@ -253,24 +231,34 @@ const Teams = () => {
             <h2 className="text-xl font-semibold mb-4 text-green-600">
               {selectedTeam.name}
             </h2>
-            <p>
-              <strong>O‘quvchilar soni:</strong>{" "}
-              {selectedTeam.studentCount ?? 0}
-            </p>
-            <p>
-              <strong>Xona:</strong> {selectedTeam.roomName || "-"}
-            </p>
-            <p>
-              <strong>Dars vaqti:</strong> {selectedTeam.startTime} -{" "}
-              {selectedTeam.endTime}
-            </p>
-            <p>
-              <strong>Haftada kunlari:</strong>{" "}
-              {selectedTeam.weekDays?.join(", ") || "-"}
-            </p>
-            <p>
-              <strong>Ustoz ID:</strong> {selectedTeam.teacherId || "-"}
-            </p>
+            {selectedTeam.studentCount !== undefined && (
+              <p>
+                <strong>O‘quvchilar soni:</strong> {selectedTeam.studentCount}
+              </p>
+            )}
+            {selectedTeam.roomName && (
+              <p>
+                <strong>Xona:</strong> {selectedTeam.roomName}
+              </p>
+            )}
+            {(selectedTeam.startTime || selectedTeam.endTime) && (
+              <p>
+                <strong>Dars vaqti:</strong> {selectedTeam.startTime || ""}{" "}
+                {selectedTeam.startTime && selectedTeam.endTime ? "-" : ""}{" "}
+                {selectedTeam.endTime || ""}
+              </p>
+            )}
+            {selectedTeam.weekDays?.length > 0 && (
+              <p>
+                <strong>Haftada kunlari:</strong>{" "}
+                {selectedTeam.weekDays.join(", ")}
+              </p>
+            )}
+            {selectedTeam.teacherName && (
+              <p>
+                <strong>Ustoz:</strong> {selectedTeam.teacherName}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -327,15 +315,20 @@ const Teams = () => {
                   </label>
                 ))}
               </div>
-              <input
-                type="number"
+              <select
                 name="teacherId"
-                placeholder="Ustoz ID"
                 value={form.teacherId}
                 onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="border px-4 py-2 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
-              />
+              >
+                <option value="">Ustoz tanlang</option>
+                {teachers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
               <select
                 name="roomId"
                 value={form.roomId}
