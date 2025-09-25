@@ -21,7 +21,7 @@ function ScoreHistory() {
     }
 
     const result = await response.json();
-    return result.success && result.data ? result.data : [];
+    return result.success && result.data ? [...result.data].reverse() : [];
   };
 
   const {
@@ -31,7 +31,7 @@ function ScoreHistory() {
   } = useQuery({
     queryKey: ["myMarks"],
     queryFn: fetchMyMarks,
-    staleTime: 1000 * 60 * 5, // 5 daqiqa cache
+    staleTime: 1000 * 60 * 5, 
   });
 
   const getLevelColor = (level) => {
@@ -97,8 +97,6 @@ function ScoreHistory() {
           </div>
         )}
       </div>
-
-      {/* 🔽 Ant Design Modal */}
       <Modal
         open={!!selectedMark}
         onCancel={() => setSelectedMark(null)}

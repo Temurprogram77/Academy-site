@@ -30,7 +30,8 @@ export default function UserDashboard() {
     const res = await axios.get("http://167.86.121.42:8080/user/leaderboard", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data.data?.slice(0, 5) || [];
+    const data = res.data.data || [];
+    return data.slice(-3).reverse();
   };
 
   const { data: dashboard, isLoading: isDashboardLoading } = useQuery({
