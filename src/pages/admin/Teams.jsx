@@ -91,6 +91,15 @@ const Teams = () => {
     }));
   };
 
+  const handleTimeInput = (e) => {
+    let value = e.target.value.replace(/\D/g, ""); // faqat raqam qoldir
+    if (value.length > 4) value = value.slice(0, 4); // 4 dan ortiq raqam yo‘q
+    if (value.length >= 3) {
+      value = value.slice(0, 2) + ":" + value.slice(2);
+    }
+    setForm((prev) => ({ ...prev, [e.target.name]: value }));
+  };
+
   const handleAddTeam = async (e) => {
     e.preventDefault();
 
@@ -98,14 +107,16 @@ const Teams = () => {
     if (!form.name.trim()) return toast.error("⚠ Guruh nomini kiriting!");
     if (!form.roomId) return toast.error("⚠ Xona tanlang!");
     if (!form.teacherId) return toast.error("⚠ Ustoz ID sini kiriting!");
-    if (!form.startTime || !form.endTime) return toast.error("⚠ Dars vaqtini to‘liq kiriting!");
-    if (form.weekDays.length === 0) return toast.error("⚠ Haftaning kunlarini tanlang!");
+    if (!form.startTime || !form.endTime)
+      return toast.error("⚠ Dars vaqtini to‘liq kiriting!");
+    if (form.weekDays.length === 0)
+      return toast.error("⚠ Haftaning kunlarini tanlang!");
 
     // payload tayyorlash
     const payload = {
       name: form.name,
-      startTime: form.startTime + ":00", // API uchun format HH:mm:ss
-      endTime: form.endTime + ":00",
+      startTime: form.startTime, // HH:mm format
+      endTime: form.endTime, // HH:mm format
       weekDays: form.weekDays,
       teacherId: Number(form.teacherId),
       roomId: Number(form.roomId),
@@ -291,33 +302,54 @@ const Teams = () => {
                 required
               />
               <input
-                type="time"
+                type="text"
                 name="startTime"
-                value={form.startTime}
-                onChange={handleFormChange}
+                placeholder="00:00"
+                value={form.startTime} // bu yerda replace qilish shart emas
+                onChange={handleTimeInput}
+                maxLength={5} // HH:mm bo‘lishi uchun 5
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
               <input
-                type="time"
+                type="text"
                 name="endTime"
+                placeholder="00:00"
                 value={form.endTime}
-                onChange={handleFormChange}
+                onChange={handleTimeInput}
+                maxLength={5} // HH:mm
                 className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
+
               <div className="flex flex-wrap gap-2">
-                {weekOptions.map((day) => (
-                  <label key={day} className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      value={day}
-                      checked={form.weekDays.includes(day)}
-                      onChange={handleWeekDaysChange}
-                    />
-                    <span>{day}</span>
-                  </label>
-                ))}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {weekOptions.map((day) => (
+                      <label
+                        key={day}
+                        className={`flex items-center cursor-pointer transition-all duration-200
+        rounded-full px-3 py-1 text-sm font-medium
+        border border-green-400
+        ${
+          form.weekDays.includes(day)
+            ? "bg-green-500 text-white scale-105"
+            : "bg-white text-green-700"
+        }
+        hover:bg-green-400 hover:text-white hover:scale-105`}
+                      >
+                        <input
+                          type="checkbox"
+                          value={day}
+                          checked={form.weekDays.includes(day)}
+                          onChange={handleWeekDaysChange}
+                          className="hidden"
+                        />
+                        {day.slice(0, 3)}
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
               <input
                 type="number"
