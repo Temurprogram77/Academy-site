@@ -41,6 +41,23 @@ const Teams = () => {
       navigate("/login");
     }
   }, [token, navigate]);
+  const [teachers, setTeachers] = useState([]);
+
+  const fetchTeachers = async () => {
+    try {
+      const res = await api.get("/user/search?role=TEACHER&page=0&size=10", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTeachers(res.data?.data?.body || []);
+    } catch (err) {
+      console.error(err);
+      toast.error("❌ Ustozlar yuklanmadi!");
+    }
+  };
+
+  useEffect(() => {
+    if (token) fetchTeachers();
+  }, [token]);
 
   // React Query fetch
   const fetchTeams = async () => {
@@ -351,15 +368,21 @@ const Teams = () => {
                   </div>
                 </div>
               </div>
-              <input
-                type="number"
+              <select
                 name="teacherId"
-                placeholder="Ustoz ID"
                 value={form.teacherId}
                 onChange={handleFormChange}
-                className="border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="border px-4 py-2 rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
-              />
+              >
+                <option value="">Ustoz tanlang</option>
+                {teachers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.fullName}
+                  </option>
+                ))}
+              </select>
+
               <select
                 name="roomId"
                 value={form.roomId}
