@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Phone, Users, UserIcon, Pen } from "lucide-react"
 import { IoMdCloseCircle } from "react-icons/io"
 import axios from "axios"
@@ -13,51 +14,40 @@ const defaultImage =
 function UserDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [userData, setUserData] = useState(null)
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const fileInputRef = useRef(null)
+  const token = localStorage.getItem("token")
+
+  const { data: userData, isLoading } = useQuery({
+    queryKey: ["user-detail"],
+    queryFn: async () => {
+      const res = await axios.get("http://167.86.121.42:8080/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      return res.data.data
+    },
+    staleTime: 1000 * 60 * 5,
+  })
+
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
     imageUrl: defaultImage,
   })
-  const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const fileInputRef = useRef(null)
-
-  const fetchUserDetail = useCallback(async () => {
-    setLoading(true)
-    try {
-      const token = localStorage.getItem("token")
-      const res = await axios.get(`http://167.86.121.42:8080/user`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (res.data?.success) {
-        setUserData(res.data.data)
-        setFormData({
-          fullName: res.data.data.fullName || "",
-          phone: res.data.data.phone || "",
-          imageUrl: res.data.data.imageUrl || defaultImage,
-        })
-      } else {
-        setUserData(null)
-      }
-    } catch (error) {
-      console.error("Error fetching user detail:", error)
-      setUserData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
 
   useEffect(() => {
-    fetchUserDetail()
-  }, [fetchUserDetail])
+    if (userData) {
+      setFormData({
+        fullName: userData.fullName || "",
+        phone: userData.phone || "",
+        imageUrl: userData.imageUrl || defaultImage,
+      })
+    }
+  }, [userData])
 
   const uploadFile = async (file) => {
-    const token = localStorage.getItem("token")
     const data = new FormData()
     data.append("file", file)
     const res = await axios.post(
@@ -88,27 +78,26 @@ function UserDetail() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const token = localStorage.getItem("token")
       const updatedData = {
         fullName: formData.fullName.trim() || userData.fullName,
         phone: formData.phone.trim() || userData.phone,
         imageUrl: formData.imageUrl.trim() || userData.imageUrl,
       }
-      await axios.put(`http://167.86.121.42:8080/user`, updatedData, {
+      await axios.put("http://167.86.121.42:8080/user", updatedData, {
         headers: { Authorization: `Bearer ${token}` },
       })
       toast.success("Profil muvaffaqiyatli yangilandi!")
       setEditing(false)
-      fetchUserDetail()
-    } catch (error) {
-      console.error("Update error:", error)
+      queryClient.invalidateQueries(["user-detail"])
+      queryClient.invalidateQueries(["profile"])
+    } catch {
       toast.error("Profilni yangilashda xatolik")
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 p-6 flex justify-center items-center">
         <div className="flex items-center gap-3">
