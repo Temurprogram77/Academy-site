@@ -8,45 +8,46 @@ export default function UserDashboard() {
   const token = localStorage.getItem("token");
   const [selectedMark, setSelectedMark] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
+  
   const fetchDashboard = async () => {
-    const res = await axios.get(
-      "http://167.86.121.42:8080/user/user-dashboard",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    return res.data.data;
-  };
-
-  const fetchMarks = async () => {
-    const res = await axios.get("http://167.86.121.42:8080/mark/myMarks", {
+    const res = await axios.get("http://167.86.121.42:8080/user/user-dashboard", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data.data?.slice(-3) || [];
+    return res.data.data;
   };
+const fetchMarks = async () => {
+  const res = await axios.get("http://167.86.121.42:8080/mark/myMarks", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = res.data.data || [];
+  return data.reverse().slice(0, 3); 
+};
+
 
   const fetchLeaderboard = async () => {
     const res = await axios.get("http://167.86.121.42:8080/user/leaderboard", {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = res.data.data || [];
-    return data.slice(-3).reverse();
+    return data.slice(0, 5); 
   };
 
   const { data: dashboard, isLoading: isDashboardLoading } = useQuery({
     queryKey: ["user-dashboard"],
     queryFn: fetchDashboard,
+    staleTime: 1000 * 60 * 5, 
   });
 
   const { data: marks = [], isLoading: isMarksLoading } = useQuery({
     queryKey: ["user-marks"],
     queryFn: fetchMarks,
+    staleTime: 1000 * 60 * 2,
   });
 
   const { data: leaderboard = [], isLoading: isLeaderboardLoading } = useQuery({
     queryKey: ["leaderboard"],
     queryFn: fetchLeaderboard,
+    staleTime: 1000 * 60 * 2,
   });
 
   const getCardStyle = (level) => {
@@ -74,7 +75,6 @@ export default function UserDashboard() {
         return <Tag>{level || "—"}</Tag>;
     }
   };
-
   const showMarkDetails = (mark) => {
     setSelectedMark(mark);
     setIsModalVisible(true);
@@ -126,7 +126,6 @@ export default function UserDashboard() {
           </Card>
         </Col>
       </Row>
-
       <div>
         <h2 className="mb-4 text-2xl font-bold text-blue-500">
           Oxirgi 3 ta Baho
@@ -148,7 +147,6 @@ export default function UserDashboard() {
           ))}
         </Row>
       </div>
-
       <div>
         <h2 className="mb-4 text-2xl font-bold text-blue-500">
           Leaderboard (Top 5)
