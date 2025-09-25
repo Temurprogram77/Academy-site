@@ -1,48 +1,38 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Modal, Spin } from "antd";
 
 function ScoreHistory() {
-  const [marks, setMarks] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedMark, setSelectedMark] = useState(null);
 
-  useEffect(() => {
-    fetchMyMarks();
-  }, []);
+  const token = localStorage.getItem("token");
 
   const fetchMyMarks = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("Token topilmadi. Iltimos qayta login qiling.");
-        return;
-      }
+    const response = await fetch("http://167.86.121.42:8080/mark/myMarks", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      const response = await fetch("http://167.86.121.42:8080/mark/myMarks", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Xatolik: " + response.status);
-      }
-
-      const result = await response.json();
-      if (result.success && result.data) {
-        setMarks(result.data);
-      } else {
-        setMarks([]);
-      }
-    } catch (error) {
-      console.error("Ballarni olishda xatolik:", error);
-      setMarks([]);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error("Xatolik: " + response.status);
     }
+
+    const result = await response.json();
+    return result.success && result.data ? result.data : [];
   };
+
+  const {
+    data: marks = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["myMarks"],
+    queryFn: fetchMyMarks,
+    staleTime: 1000 * 60 * 5, // 5 daqiqa cache
+  });
 
   const getLevelColor = (level) => {
     switch (level) {
@@ -64,10 +54,14 @@ function ScoreHistory() {
           <h2 className="text-xl font-bold text-green-600">Ball Tarixi</h2>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center items-center py-8">
-            <div className="w-8 h-8 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin"></div>
+            <Spin size="large" />
             <span className="ml-3 text-green-600">Yuklanmoqda...</span>
+          </div>
+        ) : isError ? (
+          <div className="text-center py-8 text-red-500">
+            Xatolik yuz berdi
           </div>
         ) : marks.length === 0 ? (
           <div className="text-center py-8 text-gray-500">Ballar topilmadi</div>
@@ -104,58 +98,49 @@ function ScoreHistory() {
         )}
       </div>
 
-      {selectedMark && (
-       <div
-  className="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
-  onClick={() => setSelectedMark(null)}
->
-  <div
-    className="bg-white rounded-lg p-4 max-w-xs w-full shadow-lg relative"
-    onClick={(e) => e.stopPropagation()}
-  >
-    <button
-      onClick={() => setSelectedMark(null)}
-      className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-sm"
-    >
-      ✕
-    </button>
-    <h3 className="text-base font-semibold text-green-600 mb-2">
-      Baho haqida ma'lumot
-    </h3>
-    <div className="space-y-1 text-xs">
-      <p>
-        <span className="font-semibold">Talaba:</span>{" "}
-        {selectedMark.studentName}
-      </p>
-      <p>
-        <span className="font-semibold">Bahosi:</span>{" "}
-        {selectedMark.score}
-      </p>
-      <p>
-        <span className="font-semibold">Daraja:</span>{" "}
-        <span
-          className={`px-1.5 py-0.5 rounded text-xs ${getLevelColor(
-            selectedMark.level
-          )}`}
-        >
-          {selectedMark.level}
-        </span>
-      </p>
-      <p>
-        <span className="font-semibold">Sana:</span>{" "}
-        {selectedMark.date}
-      </p>
-      {selectedMark.description && (
-        <p>
-          <span className="font-semibold">Izoh:</span>{" "}
-          {selectedMark.description}
-        </p>
-      )}
-    </div>
-  </div>
-</div>
-
-      )}
+      {/* 🔽 Ant Design Modal */}
+      <Modal
+        open={!!selectedMark}
+        onCancel={() => setSelectedMark(null)}
+        footer={null}
+        maskClosable={true}
+      >
+        <h3 className="text-base font-semibold text-green-600 mb-3">
+          Baho haqida ma'lumot
+        </h3>
+        {selectedMark && (
+          <div className="space-y-2 text-sm">
+            <p>
+              <span className="font-semibold">Talaba:</span>{" "}
+              {selectedMark.studentName}
+            </p>
+            <p>
+              <span className="font-semibold">Bahosi:</span>{" "}
+              {selectedMark.score}
+            </p>
+            <p>
+              <span className="font-semibold">Daraja:</span>{" "}
+              <span
+                className={`px-1.5 py-0.5 rounded text-xs ${getLevelColor(
+                  selectedMark.level
+                )}`}
+              >
+                {selectedMark.level}
+              </span>
+            </p>
+            <p>
+              <span className="font-semibold">Sana:</span>{" "}
+              {selectedMark.date}
+            </p>
+            {selectedMark.description && (
+              <p>
+                <span className="font-semibold">Izoh:</span>{" "}
+                {selectedMark.description}
+              </p>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

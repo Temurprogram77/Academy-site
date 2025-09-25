@@ -3,8 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Card, Spin, Modal, Tag, Row, Col } from "antd";
 import { FaStar, FaMedal } from "react-icons/fa";
-import { GiTeacher } from "react-icons/gi";
-import { GrScorecard } from "react-icons/gr";
 
 export default function UserDashboard() {
   const token = localStorage.getItem("token");
@@ -50,19 +48,6 @@ export default function UserDashboard() {
     queryFn: fetchLeaderboard,
   });
 
-  const getLevelTag = (level) => {
-    switch (level) {
-      case "YASHIL":
-        return <Tag color="green">YASHIL</Tag>;
-      case "SARIQ":
-        return <Tag color="gold">SARIQ</Tag>;
-      case "QIZIL":
-        return <Tag color="red">QIZIL</Tag>;
-      default:
-        return <Tag>{level || "—"}</Tag>;
-    }
-  };
-
   const getCardStyle = (level) => {
     switch (level) {
       case "YASHIL":
@@ -73,6 +58,19 @@ export default function UserDashboard() {
         return { backgroundColor: "#dc2626", color: "#fff" };
       default:
         return { backgroundColor: "#9ca3af", color: "#fff" };
+    }
+  };
+
+  const getLevelTag = (level) => {
+    switch (level) {
+      case "YASHIL":
+        return <Tag color="green">YASHIL</Tag>;
+      case "SARIQ":
+        return <Tag color="gold">SARIQ</Tag>;
+      case "QIZIL":
+        return <Tag color="red">QIZIL</Tag>;
+      default:
+        return <Tag>{level || "—"}</Tag>;
     }
   };
 
@@ -172,24 +170,42 @@ export default function UserDashboard() {
           ))}
         </Row>
       </div>
-
       <Modal
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
         maskClosable={true}
       >
-        <div className="space-y-2">
-          <p className="flex justify-between text-3xl text-green-500 mt-4">
-            <GrScorecard />{" "}
+        <h3 className="text-base font-semibold text-green-600 mb-3">
+          Baho haqida ma'lumot
+        </h3>
+        <div className="space-y-2 text-sm">
+          <p>
+            <span className="font-semibold">Talaba:</span>{" "}
+            {selectedMark?.studentName ?? "Noma’lum"}
+          </p>
+          <p>
+            <span className="font-semibold">Bahosi:</span>{" "}
             {selectedMark?.totalScore ?? selectedMark?.score ?? "—"}
           </p>
-          <p className="flex text-2xl text-green-500 justify-between">
-            <GiTeacher /> {selectedMark?.teacherName}
+          <p>
+            <span className="font-semibold">Daraja:</span>{" "}
+            {getLevelTag(selectedMark?.level)}
           </p>
-          <p className="flex text-2xl text-green-500 justify-between">
-            <strong>Vaqti:</strong> {selectedMark?.date || "Noma’lum"}
+          <p>
+            <span className="font-semibold">O‘qituvchi:</span>{" "}
+            {selectedMark?.teacherName ?? "—"}
           </p>
+          <p>
+            <span className="font-semibold">Sana:</span>{" "}
+            {selectedMark?.date ?? "Noma’lum"}
+          </p>
+          {selectedMark?.description && (
+            <p>
+              <span className="font-semibold">Izoh:</span>{" "}
+              {selectedMark.description}
+            </p>
+          )}
         </div>
       </Modal>
     </div>
