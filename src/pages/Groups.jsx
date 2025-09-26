@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 
 const getTeacherDashboard = async (token) => {
   const { data } = await axios.get(
-    "http://167.86.121.42:8080/user/teacher-dashboard",
+    "https://nazorat.sferaacademy.uz/api/user/teacher-dashboard",
     {
       headers: { Authorization: `Bearer ${token}` },
     }
@@ -15,14 +15,17 @@ const getTeacherDashboard = async (token) => {
 
 const getTeacherGroups = async ({ queryKey }) => {
   const [_key, token, searchQuery] = queryKey;
-  const { data } = await axios.get("http://167.86.121.42:8080/group", {
-    headers: { Authorization: `Bearer ${token}` },
-    params: {
-      page: 0,
-      size: 10,
-      ...(searchQuery ? { name: searchQuery.toLowerCase() } : {}),
-    },
-  });
+  const { data } = await axios.get(
+    "https://nazorat.sferaacademy.uz/api/group",
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      params: {
+        page: 0,
+        size: 10,
+        ...(searchQuery ? { name: searchQuery.toLowerCase() } : {}),
+      },
+    }
+  );
   return data?.data?.body || [];
 };
 
@@ -89,11 +92,10 @@ const TeacherGroups = () => {
         </h1>
       </div>
     );
-  } 
+  }
   return (
     <div className="mt-[3rem]">
       <div className="max-w-[1300px] mx-auto px-4">
-
         <div className="flex flex-col md:flex-row justify-between items-center mb-[3rem] mt-[2rem] gap-4">
           <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500">
             Sizning guruhlaringiz:

@@ -8,7 +8,7 @@ function ScoreHistory() {
   const token = localStorage.getItem("token");
 
   const fetchMyMarks = async () => {
-    const response = await fetch("http://167.86.121.42:8080/mark/myMarks", {
+    const response = await fetch("https://nazorat.sferaacademy.uz/api/mark/myMarks", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

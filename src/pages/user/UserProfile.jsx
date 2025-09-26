@@ -23,7 +23,7 @@ function UserDetail() {
   const { data: userData, isLoading } = useQuery({
     queryKey: ["user-detail"],
     queryFn: async () => {
-      const res = await axios.get("http://167.86.121.42:8080/user", {
+      const res = await axios.get("https://nazorat.sferaacademy.uz/api/user", {
         headers: { Authorization: `Bearer ${token}` },
       })
       return res.data.data
@@ -51,7 +51,7 @@ function UserDetail() {
     const data = new FormData()
     data.append("file", file)
     const res = await axios.post(
-      "http://167.86.121.42:8080/api/v1/files/upload",
+      "https://nazorat.sferaacademy.uz/api/api/v1/files/upload",
       data,
       {
         headers: {
@@ -83,7 +83,7 @@ function UserDetail() {
         phone: formData.phone.trim() || userData.phone,
         imageUrl: formData.imageUrl.trim() || userData.imageUrl,
       }
-      await axios.put("http://167.86.121.42:8080/user", updatedData, {
+      await axios.put("https://nazorat.sferaacademy.uz/api/user", updatedData, {
         headers: { Authorization: `Bearer ${token}` },
       })
       toast.success("Profil muvaffaqiyatli yangilandi!")

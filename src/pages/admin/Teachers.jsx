@@ -42,7 +42,7 @@ const Teachers = () => {
     setLoading(true);
     axios
       .get(
-        "http://167.86.121.42:8080/user/search?role=TEACHER&page=0&size=50",
+        "https://nazorat.sferaacademy.uz/api/user/search?role=TEACHER&page=0&size=50",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -93,7 +93,7 @@ const Teachers = () => {
       };
 
       await axios.post(
-        "http://167.86.121.42:8080/auth/saveUser?role=TEACHER",
+        "https://nazorat.sferaacademy.uz/api/auth/saveUser?role=TEACHER",
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
