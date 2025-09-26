@@ -18,6 +18,7 @@ const LoginPage = () => {
   const [phoneError, setPhoneError] = useState("");
   const [touched, setTouched] = useState({ password: false, phone: false });
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState(""); // ✅ qo‘shildi
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ const LoginPage = () => {
 
         // ✅ Muvaffaqiyatli login xabari
         setSuccessMessage("✅ Muvaffaqiyatli login qilindi!");
+        setErrorMessage(""); // eski errorni tozalab yuborish
 
         setTimeout(() => {
           if (role === "ADMIN") navigate("/admin-dashboard");
@@ -68,13 +70,15 @@ const LoginPage = () => {
           else if (role === "STUDENT" || role === "PARENT") {
             navigate("/user-dashboard");
           }
-        }, 1000); // 1 soniya xabarni ko‘rsatib turadi
+        }, 1000);
       } else {
         setErrorMessage("Telefon nomer yoki password noto‘g‘ri.");
+        setSuccessMessage(""); // muvaffaqiyatli login xabarini tozalash
       }
     } catch (err) {
       console.error(err);
       setErrorMessage("❌ Serverga ulanishda xatolik.");
+      setSuccessMessage(""); 
     }
   };
 
@@ -185,6 +189,13 @@ const LoginPage = () => {
                   {errorMessage && (
                     <p className="text-red-500 text-center mt-2">
                       {errorMessage}
+                    </p>
+                  )}
+
+                  {/* Success message */}
+                  {successMessage && (
+                    <p className="text-green-600 text-center mt-2">
+                      {successMessage}
                     </p>
                   )}
 
