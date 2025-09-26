@@ -9,7 +9,7 @@ import { IoPersonCircleOutline } from "react-icons/io5";
 const TeacherSideBar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const logo = dataImages.logo;
-
+  
   const handleClick = () => {
     localStorage.clear();
     navigate("/login");

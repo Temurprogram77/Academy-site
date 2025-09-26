@@ -23,7 +23,6 @@ import UserDetail from "./pages/UserDetail";
 import ScoreHistory from "./pages/ScoreHistory";
 import Groups from "./pages/Groups";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import UserDashboard from "./pages/user/UserDashboard";
 import UserMarks from "./pages/user/Marks";

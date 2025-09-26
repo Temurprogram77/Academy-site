@@ -1,18 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { Crown } from "lucide-react"; // 👑 toj ikona
+import { Crown } from "lucide-react";
 
 const fetchTopStudents = async (token) => {
   const { data } = await axios.get(
     `http://167.86.121.42:8080/user/topStudentsForTeacher`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-
-  if (data?.success) {
-    return (data.data || []).sort((a, b) => b.score - a.score);
-  }
-
+  if (data?.success) return (data.data || []).sort((a, b) => b.score - a.score);
   return [];
 };
 
@@ -20,9 +16,7 @@ const TopStudent = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  if (!token) {
-    navigate("/login");
-  }
+  if (!token) navigate("/login");
 
   const {
     data: students = [],
@@ -60,9 +54,8 @@ const TopStudent = () => {
     if (!phone) return "Noma'lum";
     const cleaned = phone.replace(/\D/g, "");
     const match = cleaned.match(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
-    if (match) {
+    if (match)
       return `+${match[1]} ${match[2]}-${match[3]}-${match[4]}-${match[5]}`;
-    }
     return phone;
   };
 
@@ -82,41 +75,15 @@ const TopStudent = () => {
   const getRankIcon = (idx) => {
     switch (idx) {
       case 0:
-        return (
-          <span className="flex items-center gap-1">
-            <Crown className="w-5 h-5 text-yellow-500" />{" "}
-            {/* 1-o‘rin: oltin toj */}
-          </span>
-        );
-
+        return <Crown className="w-5 h-5 text-yellow-500" />;
       case 1:
-        return (
-          <span className="flex items-center gap-1">
-            <Crown className="w-5 h-5 text-gray-400" />{" "}
-            {/* 2-o‘rin: kumush toj */}
-          </span>
-        );
-
+        return <Crown className="w-5 h-5 text-gray-400" />;
       case 2:
-        return (
-          <span className="flex items-center gap-1">
-            <Crown className="w-5 h-5 text-amber-600" />{" "}
-          </span>
-        );
-
+        return <Crown className="w-5 h-5 text-amber-600" />;
       case 3:
-        return (
-          <span className="flex items-center gap-1">
-            <Crown className="w-5 h-5 text-green-500" />{" "}
-          </span>
-        );
-
+        return <Crown className="w-5 h-5 text-green-500" />;
       case 4:
-        return (
-          <span className="flex items-center gap-1">
-            <Crown className="w-5 h-5 text-blue-500" />{" "}
-          </span>
-        );
+        return <Crown className="w-5 h-5 text-blue-500" />;
       default:
         return idx + 1;
     }
@@ -143,77 +110,71 @@ const TopStudent = () => {
       <h1 className="text-xl sm:text-2xl text-center font-bold text-green-600 mb-6">
         Eng yaxshi o‘quvchilar
       </h1>
-
-      <div className="overflow-x-auto shadow rounded-lg">
-        <table className="w-full text-sm sm:text-base border-collapse">
-          <thead className="bg-gray-100 text-black">
-            <tr>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
-                #
-              </th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
-                Ism
-              </th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
-                Telefon
-              </th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
-                Ota/ona
-              </th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
-                Level
-              </th>
-              <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
-                Score
-              </th>
-            </tr>
-          </thead>
-
-          <tbody className="bg-white divide-y divide-gray-200">
-            {students.length > 0 ? (
-              students.map((student, idx) => (
-                <tr
-                  key={student.id || idx}
-                  className={`${
-                    idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                  } ${getRankStyles(idx)}`}
-                >
-                  <td className="px-3 sm:px-6 py-4 font-bold">
-                    {getRankIcon(idx)}
-                  </td>
-                  <td className="px-3 sm:px-6 py-4 font-semibold">
-                    {student.name || "No name"}
-                  </td>
-                  <td className="px-3 sm:px-6 py-4">
-                    {formatPhoneNumber(student.phoneNumber)}
-                  </td>
-                  <td className="px-3 sm:px-6 py-4">
-                    {student.parentName || "Ota/ona"}
-                  </td>
-                  <td
-                    className={`px-3 sm:px-6 py-2 text-center font-semibold ${getLevelColor(
-                      student.level
-                    )}`}
+      <div className="overflow-x-auto w-full">
+        <div>
+          <table className="w-full text-sm sm:text-base border-collapse">
+            <thead className="bg-gray-100 text-black">
+              <tr>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase hidden sm:table-cell">
+                  #
+                </th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                  Ism
+                </th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                  Telefon
+                </th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase hidden sm:table-cell">
+                  Ota/ona
+                </th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs uppercase">
+                  Level
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {students.length > 0 ? (
+                students.map((student, idx) => (
+                  <tr
+                    key={student.id || idx}
+                    className={`${
+                      idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+                    } ${getRankStyles(idx)}`}
                   >
-                    {student.level || "Level"}
-                  </td>
-                  <td className="px-3 sm:px-6 py-4 font-bold text-green-600">
-                    {student.score ?? 0}
+                    <td className="px-3 sm:px-6 py-4 font-bold hidden sm:table-cell">
+                      {getRankIcon(idx)}
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 font-semibold">
+                      {student.name || "No name"}
+                    </td>
+                    <td className="px-3 sm:px-6 py-4">
+                      {formatPhoneNumber(student.phoneNumber)}
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 hidden sm:table-cell">
+                      {student.parentName || "Ota/ona"}
+                    </td>
+                    <td
+                      className={`px-3 sm:px-6 py-2 text-center font-semibold ${getLevelColor(
+                        student.level
+                      )}`}
+                    >
+                      {student.score || "Level"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="text-center px-3 sm:px-6 py-4 text-gray-500"
+                  >
+                    Kechirasiz, top studentlar topilmadi!
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan="6"
-                  className="text-center px-3 sm:px-6 py-4 text-gray-500"
-                >
-                  Kechirasiz, top studentlar topilmadi!
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

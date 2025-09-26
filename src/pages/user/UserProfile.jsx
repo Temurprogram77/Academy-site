@@ -1,7 +1,6 @@
 "use client"
-
 import { useState, useRef, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import {  useNavigate } from "react-router-dom"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Phone, Users, UserIcon, Pen } from "lucide-react"
 import { IoMdCloseCircle } from "react-icons/io"
@@ -12,7 +11,6 @@ const defaultImage =
   "https://t4.ftcdn.net/jpg/05/89/93/27/360_F_589932782_vQAEAZhHnq1QCGu5ikwrYaQD0Mmurm0N.jpg"
 
 function UserDetail() {
-  const { id } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)

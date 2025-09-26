@@ -3,19 +3,26 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useState, useEffect } from "react";
 
-const getTeacherDashboard = async (token) => {
-  const { data } = await axios.get(
-    "http://167.86.121.42:8080/user/teacher-dashboard",
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+const api = axios.create({
+  baseURL: "http://167.86.121.42:8080",
+});
+
+const getToken = () => localStorage.getItem("token");
+
+const getTeacherDashboard = async () => {
+  const token = getToken();
+  if (!token) throw new Error("Token mavjud emas");
+  const { data } = await api.get("/user/teacher-dashboard", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return data?.data;
 };
 
 const getTeacherGroups = async ({ queryKey }) => {
-  const [_key, token, searchQuery] = queryKey;
-  const { data } = await axios.get("http://167.86.121.42:8080/group", {
+  const [, searchQuery] = queryKey;
+  const token = getToken();
+  if (!token) throw new Error("Token mavjud emas");
+  const { data } = await api.get("/group", {
     headers: { Authorization: `Bearer ${token}` },
     params: {
       page: 0,
@@ -27,28 +34,25 @@ const getTeacherGroups = async ({ queryKey }) => {
 };
 
 const TeacherGroups = () => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const navigate = useNavigate();    
+  const token = getToken();
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-    }
+    if (!token) navigate("/login");
   }, [token, navigate]);
 
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
-    data: dashboard,
     isLoading: dashboardLoading,
     error: dashboardError,
   } = useQuery({
-    queryKey: ["teacher-dashboard", token],
-    queryFn: () => getTeacherDashboard(token),
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 10,
+    queryKey: ["teacher-dashboard"],
+    queryFn: getTeacherDashboard,
     enabled: !!token,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
   });
 
   const {
@@ -56,16 +60,16 @@ const TeacherGroups = () => {
     isLoading: groupsLoading,
     error: groupsError,
   } = useQuery({
-    queryKey: ["teacher-groups", token, searchQuery],
+    queryKey: ["teacher-groups", searchQuery],
     queryFn: getTeacherGroups,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 10,
     enabled: !!token,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
   });
 
   const handleGoToGrade = (groupId) => {
-    navigate(`/teacher-dashboard/grade/${groupId}`);
     localStorage.setItem("groupId", groupId);
+    navigate(`/teacher-dashboard/grade/${groupId}`);
   };
 
   const handleSubmit = (e) => {
@@ -89,11 +93,11 @@ const TeacherGroups = () => {
         </h1>
       </div>
     );
-  } 
+  }
+
   return (
     <div className="mt-[3rem]">
       <div className="max-w-[1300px] mx-auto px-4">
-
         <div className="flex flex-col md:flex-row justify-between items-center mb-[3rem] mt-[2rem] gap-4">
           <h1 className="lg:text-4xl md:text-3xl text-xl text-green-500">
             Sizning guruhlaringiz:

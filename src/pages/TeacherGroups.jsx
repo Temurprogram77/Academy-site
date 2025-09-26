@@ -7,9 +7,7 @@ import TopStudent from "../components/TopStudent";
 const fetchTeacherDashboard = async (token) => {
   const { data } = await axios.get(
     "http://167.86.121.42:8080/user/teacher-dashboard",
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
+    { headers: { Authorization: `Bearer ${token}` } }
   );
   return data?.data || null;
 };
@@ -19,23 +17,16 @@ const TeacherGroups = () => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-    }
+    if (!token) navigate("/login");
   }, [token, navigate]);
 
-  const {
-    data: dashboard,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const { data: dashboard, isLoading, isError, error } = useQuery({
     queryKey: ["teacher-dashboard", token],
     queryFn: () => fetchTeacherDashboard(token),
     retry: false,
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 10,
-    enabled: !!token, 
+    enabled: !!token,
     onError: (err) => {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
@@ -80,22 +71,18 @@ const TeacherGroups = () => {
             <p className="text-gray-700 mb-2 text-[1.2rem]">
               <span className="font-medium">Guruhlar soni</span>
             </p>
-            <h2 className="text-4xl font-semibold text-gray-800 mb-2">
-              {dashboard.groupCount}
-            </h2>
+            <h2 className="text-4xl font-semibold text-gray-800 mb-2">{dashboard.groupCount}</h2>
           </div>
-
           <div className="bg-white/80 backdrop-blur-md border-[2px] rounded-xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-500">
             <p className="text-gray-700 mb-2 text-[1.2rem]">
               <span className="font-medium">O‘quvchilar soni</span>
             </p>
-            <h2 className="text-4xl font-semibold text-gray-800 mb-2">
-              {dashboard.studentCount}
-            </h2>
+            <h2 className="text-4xl font-semibold text-gray-800 mb-2">{dashboard.studentCount}</h2>
           </div>
         </div>
-
-        <TopStudent />
+        <div className="w-full">
+          <TopStudent />
+        </div>
       </div>
     </div>
   );
