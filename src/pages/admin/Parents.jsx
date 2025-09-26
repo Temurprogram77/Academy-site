@@ -26,7 +26,7 @@ const fetchParents = async () => {
   const token = localStorage.getItem("token");
   if (!token) throw new Error("Token topilmadi!");
   const res = await axios.get(
-    "http://167.86.121.42:8080/user/search?role=PARENT&page=0&size=50",
+    "https://nazorat.sferaacademy.uz/api/user/search?role=PARENT&page=0&size=50",
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return res.data?.data?.body || [];
@@ -83,7 +83,7 @@ const Parents = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://167.86.121.42:8080/auth/saveUser?role=PARENT",
+        "https://nazorat.sferaacademy.uz/api/auth/saveUser?role=PARENT",
         {
           fullName: form.fullName.trim(),
           phoneNumber: form.phone.replace(/\D/g, ""),

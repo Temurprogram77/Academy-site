@@ -22,7 +22,7 @@ const Profile = () => {
   useEffect(() => {
     if (!token) return;
     axios
-      .get("http://167.86.121.42:8080/user", {
+      .get("https://nazorat.sferaacademy.uz/api/user", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -49,7 +49,7 @@ const Profile = () => {
 
     try {
       const res = await axios.post(
-        "http://167.86.121.42:8080/api/v1/files/upload",
+        "https://nazorat.sferaacademy.uz/api/api/v1/files/upload",
         form,
         {
           headers: {
@@ -88,7 +88,7 @@ const Profile = () => {
         form.append("file", fileInputRef.current.files[0]);
       }
 
-      await axios.put("http://167.86.121.42:8080/user", form, {
+      await axios.put("https://nazorat.sferaacademy.uz/api/user", form, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

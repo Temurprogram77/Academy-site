@@ -42,7 +42,7 @@ const Teachers = () => {
     setLoading(true);
     axios
       .get(
-        "http://167.86.121.42:8080/user/search?role=TEACHER&page=0&size=50",
+        "https://nazorat.sferaacademy.uz/api/user/search?role=TEACHER&page=0&size=50",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -93,7 +93,7 @@ const Teachers = () => {
       };
 
       await axios.post(
-        "http://167.86.121.42:8080/auth/saveUser?role=TEACHER",
+        "https://nazorat.sferaacademy.uz/api/auth/saveUser?role=TEACHER",
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -147,75 +147,77 @@ const Teachers = () => {
       </div>
 
       {/* Teachers jadvali */}
-      <table className="min-w-full divide-y divide-gray-200 my-6 border shadow-lg rounded-xl overflow-hidden">
-        <thead className="bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              O‘qituvchi
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Telefon
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Role
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-              Amal
-            </th>
-          </tr>
-        </thead>
+      <div className="max-h-[70vh] overflow-y-auto border shadow-lg rounded-xl">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="rounded-xl bg-gradient-to-r from-[#5DB444] to-[#31e000] text-white">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                O‘qituvchi
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Telefon
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                Amal
+              </th>
+            </tr>
+          </thead>
 
-        <tbody className="bg-white divide-y divide-gray-200">
-          {filteredTeachers.length > 0 ? (
-            filteredTeachers.map((teacher, idx) => (
-              <tr
-                key={teacher.id || idx}
-                className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
-              >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
-                  {teacher.imageUrl ? (
-                    <img
-                      src={teacher.imageUrl}
-                      alt="teacher"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                      <FiUser className="text-gray-500" size={16} />
-                    </div>
-                  )}
-                  {teacher.fullName || "No name"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {formatPhoneNumber(
-                    teacher.phoneNumber || teacher.phone || teacher.username
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {teacher.role || "TEACHER"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    onClick={() => openModal(teacher)}
-                    className="text-[#5DB444] hover:text-green-700 font-medium"
-                  >
-                    Ko‘proq
-                  </button>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredTeachers.length > 0 ? (
+              filteredTeachers.map((teacher, idx) => (
+                <tr
+                  key={teacher.id || idx}
+                  className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
+                    {teacher.imageUrl ? (
+                      <img
+                        src={teacher.imageUrl}
+                        alt="teacher"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                        <FiUser className="text-gray-500" size={16} />
+                      </div>
+                    )}
+                    {teacher.fullName || "No name"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {formatPhoneNumber(
+                      teacher.phoneNumber || teacher.phone || teacher.username
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {teacher.role || "TEACHER"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <button
+                      onClick={() => openModal(teacher)}
+                      className="text-[#5DB444] hover:text-green-700 font-medium"
+                    >
+                      Ko‘proq
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="4"
+                  className="text-center px-6 py-4 text-sm text-gray-500"
+                >
+                  O‘qituvchilar topilmadi
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td
-                colSpan="4"
-                className="text-center px-6 py-4 text-sm text-gray-500"
-              >
-                O‘qituvchilar topilmadi
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Add Teacher Modal */}
       {addModal && (

@@ -5,7 +5,7 @@ import { Crown } from "lucide-react";
 
 const fetchTopStudents = async (token) => {
   const { data } = await axios.get(
-    `http://167.86.121.42:8080/user/topStudentsForTeacher`,
+    `https://nazorat.sferaacademy.uz/api/user/topStudentsForTeacher`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   if (data?.success) return (data.data || []).sort((a, b) => b.score - a.score);

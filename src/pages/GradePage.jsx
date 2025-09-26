@@ -8,7 +8,7 @@ const fetchStudents = async ({ queryKey }) => {
   const [, token, groupId] = queryKey;
   if (!token || !groupId) throw new Error("Token yoki groupId topilmadi");
 
-  const { data } = await axios.get(`http://167.86.121.42:8080/group/${groupId}`, {
+  const { data } = await axios.get(`https://nazorat.sferaacademy.uz/api/group/${groupId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -22,7 +22,7 @@ const fetchStudents = async ({ queryKey }) => {
 
 const postGrade = async ({ studentId, scores, token }) => {
   return axios.post(
-    "http://167.86.121.42:8080/mark",
+    "https://nazorat.sferaacademy.uz/api/mark",
     {
       studentId,
       homeworkScore: Number(scores.homeworkScore),

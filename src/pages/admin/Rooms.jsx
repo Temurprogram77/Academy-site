@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const fetchRooms = async () => {
   const token = localStorage.getItem("token");
-  const res = await axios.get("http://167.86.121.42:8080/room", {
+  const res = await axios.get("https://nazorat.sferaacademy.uz/api/room", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data?.data || [];
@@ -44,7 +44,7 @@ const Rooms = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://167.86.121.42:8080/room?name=${encodeURIComponent(
+        `https://nazorat.sferaacademy.uz/api/room?name=${encodeURIComponent(
           name.trim()
         )}`,
         {},
@@ -65,7 +65,7 @@ const Rooms = () => {
     if (!window.confirm("Rostdan ham xonani o‘chirmoqchimisiz?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://167.86.121.42:8080/room/${id}`, {
+      await axios.delete(`https://nazorat.sferaacademy.uz/api/room/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Xona o‘chirildi!");
@@ -91,7 +91,7 @@ const Rooms = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://167.86.121.42:8080/room/${
+        `https://nazorat.sferaacademy.uz/api/room/${
           selectedRoom.id
         }?name=${encodeURIComponent(name.trim())}`,
         {},

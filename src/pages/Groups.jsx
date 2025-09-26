@@ -94,7 +94,6 @@ const TeacherGroups = () => {
       </div>
     );
   }
-
   return (
     <div className="mt-[3rem]">
       <div className="max-w-[1300px] mx-auto px-4">

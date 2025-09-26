@@ -8,21 +8,21 @@ import { MdDelete } from "react-icons/md";
 import { toast } from "sonner";
 
 const fetchMarks = async (token) => {
-  const { data } = await axios.get("http://167.86.121.42:8080/mark/myMarks", {
+  const { data } = await axios.get("https://nazorat.sferaacademy.uz/api/mark/myMarks", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data?.data || [];
 };
 
 const deleteMark = async ({ id, token }) => {
-  await axios.delete(`http://167.86.121.42:8080/mark/${id}`, {
+  await axios.delete(`https://nazorat.sferaacademy.uz/api/mark/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
 
 const editMark = async ({ mark, formData, token }) => {
   await axios.put(
-    `http://167.86.121.42:8080/mark/${mark.id}`,
+    `https://nazorat.sferaacademy.uz/api/mark/${mark.id}`,
     {
       studentId: mark.studentId,
       homeworkScore: Number(formData.homeworkScore),
