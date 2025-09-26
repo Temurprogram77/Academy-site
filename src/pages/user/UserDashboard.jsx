@@ -10,13 +10,13 @@ export default function UserDashboard() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   
   const fetchDashboard = async () => {
-    const res = await axios.get("https://nazorat.sferaacademy.uz/apiuser/user-dashboard", {
+    const res = await axios.get("https://nazorat.sferaacademy.uz/api/user/user-dashboard", {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data.data;
   };
 const fetchMarks = async () => {
-  const res = await axios.get("https://nazorat.sferaacademy.uz/apimark/myMarks", {
+  const res = await axios.get("https://nazorat.sferaacademy.uz/api/mark/myMarks", {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = res.data.data || [];
@@ -25,7 +25,7 @@ const fetchMarks = async () => {
 
 
   const fetchLeaderboard = async () => {
-    const res = await axios.get("https://nazorat.sferaacademy.uz/apiuser/leaderboard", {
+    const res = await axios.get("https://nazorat.sferaacademy.uz/api/user/leaderboard", {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = res.data.data || [];
