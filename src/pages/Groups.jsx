@@ -14,7 +14,7 @@ const getTeacherDashboard = async (token) => {
 };
 
 const getTeacherGroups = async ({ queryKey }) => {
-  const [_key, token, searchQuery] = queryKey;
+  const [token, searchQuery] = queryKey;
   const { data } = await axios.get(
     "https://nazorat.sferaacademy.uz/api/group",
     {
@@ -43,7 +43,6 @@ const TeacherGroups = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
-    data: dashboard,
     isLoading: dashboardLoading,
     error: dashboardError,
   } = useQuery({
