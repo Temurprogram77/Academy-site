@@ -18,7 +18,6 @@ const LoginPage = () => {
   const [phoneError, setPhoneError] = useState("");
   const [touched, setTouched] = useState({ password: false, phone: false });
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
@@ -30,10 +29,11 @@ const LoginPage = () => {
     if (token && role) {
       if (role === "ADMIN") navigate("/admin-dashboard");
       else if (role === "TEACHER") navigate("/teacher-dashboard");
-      else if (role === "STUDENT") navigate("/user-dashboard");
-      else if (role === "PARENT") navigate("/user-dashboard");
+      else if (role === "STUDENT" || role === "PARENT") {
+        navigate("/user-dashboard");
+      }
     } else {
-      setLoading(false); // login sahifasi ko‘rinsin
+      setLoading(false);
     }
   }, [navigate]);
 
@@ -94,7 +94,7 @@ const LoginPage = () => {
               loop
               src={Animated}
               style={{
-                width: window.innerWidth >= 1280 ? "550px" : "400px", // xl: 1280px dan katta
+                width: window.innerWidth >= 1280 ? "550px" : "400px",
                 height: window.innerWidth >= 1280 ? "550px" : "400px",
               }}
             />
@@ -178,15 +178,10 @@ const LoginPage = () => {
                     </p>
                   )}
 
-                  {/* API response messages */}
+                  {/* API error message */}
                   {errorMessage && (
                     <p className="text-red-500 text-center mt-2">
                       {errorMessage}
-                    </p>
-                  )}
-                  {successMessage && (
-                    <p className="text-green-600 text-center mt-2">
-                      {successMessage}
                     </p>
                   )}
 
