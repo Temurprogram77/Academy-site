@@ -59,13 +59,16 @@ const LoginPage = () => {
         const role = res.data.message?.toUpperCase();
         localStorage.setItem("role", role);
 
+        // ✅ Muvaffaqiyatli login xabari
+        setSuccessMessage("✅ Muvaffaqiyatli login qilindi!");
+
         setTimeout(() => {
           if (role === "ADMIN") navigate("/admin-dashboard");
           else if (role === "TEACHER") navigate("/teacher-dashboard");
           else if (role === "STUDENT" || role === "PARENT") {
             navigate("/user-dashboard");
           }
-        }, 500);
+        }, 1000); // 1 soniya xabarni ko‘rsatib turadi
       } else {
         setErrorMessage("Telefon nomer yoki password noto‘g‘ri.");
       }
